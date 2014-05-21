@@ -11,6 +11,11 @@ public class AutenticacaoException extends Exception {
         super("Autenticação recusada.");
         this.login = login;
     }
+    
+    public AutenticacaoException(final Exception e) {
+        super("Autenticação recusada.", e);
+        this.login = null;
+    }
 
     public static class CredenciaisIncorretas extends AutenticacaoException {
 
@@ -25,11 +30,18 @@ public class AutenticacaoException extends Exception {
             super(login);
         }
     }
-    
+
+    public static class UsuarioInexistente extends AutenticacaoException {
+
+        public UsuarioInexistente(String login) {
+            super(login);
+        }
+    }
+
     public static class ServicoIndisponivel extends AutenticacaoException {
 
-        public ServicoIndisponivel(String login) {
-            super(login);
+        public ServicoIndisponivel(Exception e) {
+            super(e);
         }
     }
 }

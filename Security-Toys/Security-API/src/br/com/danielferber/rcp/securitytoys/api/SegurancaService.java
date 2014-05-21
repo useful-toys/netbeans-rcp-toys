@@ -36,7 +36,7 @@ public abstract class SegurancaService {
      */
     public abstract UsuarioAutenticado getUsuario();
 
-    public abstract UsuarioAutenticado login(String login, char [] senha) throws AutenticacaoException.CredenciaisIncorretas, AutenticacaoException.ServicoIndisponivel, AutenticacaoException.UsuarioInativo;
+    public abstract UsuarioAutenticado login(String login, char [] senha) throws AutenticacaoException.CredenciaisIncorretas, AutenticacaoException.ServicoIndisponivel, AutenticacaoException.UsuarioInativo, AutenticacaoException.UsuarioInexistente;
 
     public abstract void logoff();
 }

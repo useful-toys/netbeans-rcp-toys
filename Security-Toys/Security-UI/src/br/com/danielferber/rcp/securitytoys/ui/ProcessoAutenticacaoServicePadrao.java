@@ -75,7 +75,10 @@ public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoServi
 
                 } catch (final AutenticacaoException.CredenciaisIncorretas e) {
                     contadorTentativas++;
-                    notificationLine.setErrorMessage("Estas credenciais incorretas.");
+                    notificationLine.setErrorMessage("Estas credenciais estão incorretas.");
+                } catch (final AutenticacaoException.UsuarioInexistente e) {
+                    contadorTentativas++;
+                    notificationLine.setErrorMessage("Estas credenciais estão incorretas.");
                 } catch (final AutenticacaoException.UsuarioInativo e) {
                     contadorTentativas++;
                     notificationLine.setErrorMessage("Estas credenciais não esão ativas.");

@@ -15,7 +15,7 @@ import java.util.Set;
  *
  * @author Daniel
  */
-public abstract class UsuarioAutenticadoPadrao implements UsuarioAutenticado {
+public class UsuarioAutenticadoPadrao implements UsuarioAutenticado {
 
     private final String login;
     private final String nome;
@@ -42,6 +42,13 @@ public abstract class UsuarioAutenticadoPadrao implements UsuarioAutenticado {
         return perfis;
     }
 
+    protected AutorizacaoException avaliaPermissao(String nomeRecurso) {
+        if (! this.perfis.contains(nomeRecurso)) {
+            return new AutorizacaoException.NaoAutorizado(this, nomeRecurso);
+        }
+        return null;
+    }
+
     @Override
     public final boolean temPermissao(final String recurso) {
         final AutorizacaoException motivo = avaliaPermissao(recurso);
@@ -65,8 +72,6 @@ public abstract class UsuarioAutenticadoPadrao implements UsuarioAutenticado {
             throw motivo;
         }
     }
-
-    protected abstract AutorizacaoException avaliaPermissao(String nomeRecurso);
 
     @Override
     public String toString() {

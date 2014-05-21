@@ -42,7 +42,7 @@ public class SegurancaServicePadrao extends SegurancaService {
     }
 
     @Override
-    public UsuarioAutenticado login(final String chave, final char[] senha) throws AutenticacaoException.CredenciaisIncorretas, AutenticacaoException.ServicoIndisponivel, AutenticacaoException.UsuarioInativo {
+    public UsuarioAutenticado login(final String chave, final char[] senha) throws AutenticacaoException.CredenciaisIncorretas, AutenticacaoException.ServicoIndisponivel, AutenticacaoException.UsuarioInativo, AutenticacaoException.UsuarioInexistente {
         if (usuarioAutenticado != null) {
             LOGGER.warn("Inconsistência no login. Já existia um usuário autenticado. usuario={}", usuarioAutenticado);
             usuarioAutenticado = null;
@@ -55,7 +55,7 @@ public class SegurancaServicePadrao extends SegurancaService {
         return usuarioAutenticado;
     }
 
-    protected void delegarLogin(final String chave, final char[] senha) throws AutenticacaoException.CredenciaisIncorretas, AutenticacaoException.ServicoIndisponivel, AutenticacaoException.UsuarioInativo {
+    protected void delegarLogin(final String chave, final char[] senha) throws AutenticacaoException.CredenciaisIncorretas, AutenticacaoException.ServicoIndisponivel, AutenticacaoException.UsuarioInativo, AutenticacaoException.UsuarioInexistente {
         /*
          * Realiza login.
          * Se o login falhar, então usuarioAutenticado=null.
@@ -66,6 +66,9 @@ public class SegurancaServicePadrao extends SegurancaService {
             LOGGER.info("Login com sucesso. usuario={}", usuarioAutenticado);
         } catch (final AutenticacaoException.CredenciaisIncorretas e) {
             LOGGER.warn("Login recusado. Credenciais incorretas. chave={}", chave, e);
+            throw e;
+        } catch (final AutenticacaoException.UsuarioInexistente e) {
+            LOGGER.warn("Login recusado. Usuário inexistente. chave={}", chave, e);
             throw e;
         } catch (final AutenticacaoException.ServicoIndisponivel e) {
             LOGGER.warn("Login recusado. Serviço indisponível. chave={}", chave, e);
