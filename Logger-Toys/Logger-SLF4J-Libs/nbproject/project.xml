@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.apisupport.project</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
+            <code-name-base>br.com.danielferber.rcp.loggertoys.slf4jlibs</code-name-base>
+            <suite-component/>
+            <module-dependencies/>
+            <public-packages/>
+            <class-path-extension>
+                <runtime-relative-path>ext/jcl-over-slf4j-1.7.7.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jcl-over-slf4j-1.7.7.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/slf4j-api-1.7.7.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/slf4j-api-1.7.7.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/log4j-over-slf4j-1.7.7.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/log4j-over-slf4j-1.7.7.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/slf4j-jdk14-1.7.7.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/slf4j-jdk14-1.7.7.jar</binary-origin>
+            </class-path-extension>
+        </data>
+    </configuration>
+</project>
