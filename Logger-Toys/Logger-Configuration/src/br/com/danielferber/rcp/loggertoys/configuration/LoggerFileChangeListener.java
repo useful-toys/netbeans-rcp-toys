@@ -54,9 +54,7 @@ final class LoggerFileChangeListener implements FileChangeListener {
     @Override
     public void fileAttributeChanged(final FileAttributeEvent fe) {
         final Object newValue = fe.getNewValue();
-        if (newValue instanceof String) {
-            setLoggerLevel(fe.getName(), (String) newValue);
-        }
+        setLoggerLevel(fe.getName(), newValue);
         resetLogManager();
     }
 
@@ -70,24 +68,36 @@ final class LoggerFileChangeListener implements FileChangeListener {
         while (attributes.hasMoreElements()) {
             final String nome = attributes.nextElement();
             final Object valor = rootFo.getAttribute(nome);
-            if (valor instanceof String) {
-                setLoggerLevel(nome, (String) valor);
-            }
+            setLoggerLevel(nome, (String) valor);
         }
         resetLogManager();
     }
 
-    public void setLoggerLevel(final String nome, final String nomeLevel) {
-        final Logger logger = Logger.getLogger(nome);
-        final String levelNameUpr = nomeLevel.toUpperCase();
+    public void setLoggerLevel(final String nome, final Object valor) {
         try {
-            final Level level = Level.parse(levelNameUpr);
-            logger.setLevel(level);
-            System.setProperty(nome + ".level", levelNameUpr);
-        } catch (IllegalArgumentException e) {
-            Logger.getLogger("").log(Level.WARNING, "Parâmetro inválido. attr=" + nome + " stringvalue=" + levelNameUpr, e);
-        } catch (SecurityException e) {
-            Logger.getLogger("").log(Level.WARNING, "Permissão recusada para configurar logger. attr=" + nome + " stringvalue=" + levelNameUpr, e);
+            if (valor instanceof String) {
+                final String loggerName = (String) valor;
+                final Logger logger = Logger.getLogger(nome);
+                final String levelName = loggerName.toUpperCase();
+
+                final Level level;
+                try {
+                    level = Level.parse(levelName);
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("Logger level not listed in Level enum. name=" + nome + " stringvalue=" + levelName, e);
+                }
+
+                try {
+                    logger.setLevel(level);
+                    System.setProperty(nome + ".level", levelName);
+                } catch (SecurityException e) {
+                    throw new IllegalArgumentException("Not allowed to change logger configuration. name=" + nome + " stringvalue=" + levelName, e);
+                }
+            } else {
+                throw new IllegalArgumentException("Attribute values must be string. name=" + nome);
+            }
+        } catch (Exception e) {
+            Logger.getLogger("").log(Level.WARNING, "Incorrect logger configuration.", e);
         }
     }
 

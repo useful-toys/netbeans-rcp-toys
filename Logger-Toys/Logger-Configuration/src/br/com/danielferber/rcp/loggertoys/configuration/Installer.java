@@ -8,14 +8,16 @@ import org.openide.modules.OnStart;
 
 @OnStart
 public final class Installer implements Runnable {
-
+    FileObject rootFO;
+    LoggerFileChangeListener fileSystemListener;
+    
     @Override
     public void run() {
-        final FileObject rootFO = FileUtil.getConfigFile("/Logger/Level");
+        rootFO = FileUtil.getConfigFile("/Logger/Level");
         if (rootFO == null) {
             return;
         }
-        final LoggerFileChangeListener fileSystemListener = new LoggerFileChangeListener(rootFO);
+        fileSystemListener = new LoggerFileChangeListener(rootFO);
         fileSystemListener.redefinirLoggers();
         rootFO.addFileChangeListener(fileSystemListener);
     }

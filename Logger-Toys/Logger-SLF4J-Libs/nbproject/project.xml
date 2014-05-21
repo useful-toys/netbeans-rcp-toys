@@ -6,7 +6,11 @@
             <code-name-base>br.com.danielferber.rcp.loggertoys.slf4jlibs</code-name-base>
             <suite-component/>
             <module-dependencies/>
-            <public-packages/>
+            <public-packages>
+                <package>org.apache.commons.logging</package>
+                <package>org.apache.log4j</package>
+                <package>org.slf4j</package>
+            </public-packages>
             <class-path-extension>
                 <runtime-relative-path>ext/jcl-over-slf4j-1.7.7.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jcl-over-slf4j-1.7.7.jar</binary-origin>
