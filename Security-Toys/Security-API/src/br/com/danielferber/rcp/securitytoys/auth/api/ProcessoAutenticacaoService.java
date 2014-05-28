@@ -22,6 +22,7 @@ public abstract class ProcessoAutenticacaoService {
     }
 
     public abstract UsuarioAutenticado executarAutenticacao() throws ProcessoAutenticacaoException;
+    public abstract void executarLogoff();
 
     
 

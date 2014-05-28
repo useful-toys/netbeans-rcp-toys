@@ -68,7 +68,6 @@ public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoServi
                 }
 
                 /* Recorre ao serviço de autenticação. */
-                Exception exception;
                 ProgressUtils.showProgressDialogAndRun(new Runnable() {
 
                     @Override
@@ -81,7 +80,7 @@ public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoServi
                         }
                     }
                 }, "Validar credenciais...");
-                
+
                 AutenticacaoException ex = SegurancaService.getDefault().getLoginException();
                 if (ex == null) {
                     /* Se a execução chegou aqui, então o login foi aceito. */
@@ -101,5 +100,22 @@ public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoServi
             }
         }
         throw new ProcessoAutenticacaoException.ExcessoTentativas();
+    }
+
+    @Override
+    public void executarLogoff() {
+        ProgressUtils.showProgressDialogAndRun(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    if (SegurancaService.getDefault().getUsuario() != null) {
+                        SegurancaService.getDefault().logoff();
+                    }
+                } catch (Exception ex) {
+                    // ignora
+                }
+            }
+        }, "Logoff...");
     }
 }
