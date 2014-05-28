@@ -18,6 +18,7 @@ import org.openide.util.Lookup;
 public class SegurancaServicePadrao extends SegurancaService {
 
     protected UsuarioAutenticado usuarioAutenticado;
+    protected AutenticacaoException lastLoginException;
 
     public SegurancaServicePadrao() {
         super();
@@ -63,23 +64,33 @@ public class SegurancaServicePadrao extends SegurancaService {
          */
         try {
             this.usuarioAutenticado = lookupSegurancaProvider().login(chave, senha);
+            lastLoginException = null;
             LOGGER.info("Login com sucesso. usuario={}", usuarioAutenticado);
         } catch (final AutenticacaoException.CredenciaisIncorretas e) {
-            LOGGER.warn("Login recusado. Credenciais incorretas. chave={}", chave, e);
+            LOGGER.info("Login recusado. Credenciais incorretas. chave={}", chave, e);
+            lastLoginException = e;
             throw e;
         } catch (final AutenticacaoException.UsuarioInexistente e) {
-            LOGGER.warn("Login recusado. Usuário inexistente. chave={}", chave, e);
+            LOGGER.info("Login recusado. Usuário inexistente. chave={}", chave, e);
+            lastLoginException = e;
             throw e;
         } catch (final AutenticacaoException.ServicoIndisponivel e) {
-            LOGGER.warn("Login recusado. Serviço indisponível. chave={}", chave, e);
+            LOGGER.info("Login recusado. Serviço indisponível. chave={}", chave, e);
+            lastLoginException = e;
             throw e;
         } catch (final AutenticacaoException.UsuarioInativo e) {
-            LOGGER.warn("Login recusado. Usuário inativo. chave={}", chave, e);
+            LOGGER.info("Login recusado. Usuário inativo. chave={}", chave, e);
+            lastLoginException = e;
             throw e;
         } catch (final RuntimeException e) {
             LOGGER.error("Falha no login. chave={}; mensagem={}", chave, e.getMessage());
             throw e;
         }
+    }
+
+    @Override
+    public AutenticacaoException getLoginException() {
+        return lastLoginException;
     }
 
     protected void delegarLogoff() {

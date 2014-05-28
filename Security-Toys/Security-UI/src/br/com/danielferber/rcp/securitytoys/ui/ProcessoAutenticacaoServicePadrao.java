@@ -15,9 +15,11 @@ import br.com.danielferber.rcp.securitytoys.api.SegurancaService;
 import br.com.danielferber.rcp.securitytoys.api.UsuarioAutenticado;
 import br.com.danielferber.rcp.securitytoys.auth.api.ProcessoAutenticacaoException;
 import br.com.danielferber.rcp.securitytoys.auth.api.ProcessoAutenticacaoService;
+import org.netbeans.api.progress.ProgressUtils;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
 import org.openide.NotificationLineSupport;
+import org.openide.util.Exceptions;
 import org.openide.util.NbPreferences;
 
 @ServiceProvider(service = ProcessoAutenticacaoService.class)
@@ -65,25 +67,36 @@ public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoServi
                     continue;
                 }
 
-                try {
-                    /* Recorre ao serviço de autenticação. */
-                    SegurancaService.getDefault().login(login, senha);
-                    NbPreferences.forModule(ProcessoAutenticacaoServicePadrao.class).put("login", login);
+                /* Recorre ao serviço de autenticação. */
+                Exception exception;
+                ProgressUtils.showProgressDialogAndRun(new Runnable() {
 
+                    @Override
+                    public void run() {
+                        try {
+                            SegurancaService.getDefault().login(login, senha);
+                            NbPreferences.forModule(ProcessoAutenticacaoServicePadrao.class).put("login", login);
+                        } catch (AutenticacaoException ex) {
+                            // ignora
+                        }
+                    }
+                }, "Validar credenciais...");
+                
+                AutenticacaoException ex = SegurancaService.getDefault().getLoginException();
+                if (ex == null) {
                     /* Se a execução chegou aqui, então o login foi aceito. */
                     return SegurancaService.getDefault().getUsuario();
-
-                } catch (final AutenticacaoException.CredenciaisIncorretas e) {
+                } else if (ex instanceof AutenticacaoException.CredenciaisIncorretas) {
                     contadorTentativas++;
                     notificationLine.setErrorMessage("Estas credenciais estão incorretas.");
-                } catch (final AutenticacaoException.UsuarioInexistente e) {
+                } else if (ex instanceof AutenticacaoException.UsuarioInexistente) {
                     contadorTentativas++;
                     notificationLine.setErrorMessage("Estas credenciais estão incorretas.");
-                } catch (final AutenticacaoException.UsuarioInativo e) {
+                } else if (ex instanceof AutenticacaoException.UsuarioInativo) {
                     contadorTentativas++;
                     notificationLine.setErrorMessage("Estas credenciais não esão ativas.");
-                } catch (final AutenticacaoException.ServicoIndisponivel e) {
-                    notificationLine.setErrorMessage("O serviço de autenticação está indisponível no momento.");
+                } else if (ex instanceof AutenticacaoException.ServicoIndisponivel) {
+                    throw new ProcessoAutenticacaoException.ServicoIndisponivel();
                 }
             }
         }
