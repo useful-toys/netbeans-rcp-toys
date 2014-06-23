@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package br.com.danielferber.rcp.communicationtoys.bus.api;
 
 /**
@@ -20,22 +16,22 @@ package br.com.danielferber.rcp.communicationtoys.bus.api;
  *
  * @author X7WS
  */
-public abstract class Mensagem<ListenerType extends BarramentoListener> {
+public abstract class Event<ListenerType extends EventListener> {
 
     private final Class<ListenerType> classe;
 
-    public Mensagem(final Class<ListenerType> classe) {
+    public Event(final Class<ListenerType> classe) {
         if (classe == null) {
             throw new IllegalArgumentException();
         }
         this.classe = classe;
     }
 
-    final boolean isCompativel(final BarramentoListener listener) {
+    final boolean isCompativel(final EventListener listener) {
         return classe.isAssignableFrom(listener.getClass());
     }
 
-    final void executarCaller(final BarramentoListener listener) {
+    final void executarCaller(final EventListener listener) {
         this.executar((ListenerType) listener);
     }
 

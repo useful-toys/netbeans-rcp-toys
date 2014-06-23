@@ -19,23 +19,23 @@ import org.slf4j.LoggerFactory;
 class Fila implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(Fila.class.getName());
-    private final Queue<Mensagem<?>> mensagens = new ConcurrentLinkedQueue<Mensagem<?>>();
-    private final List<BarramentoListener> listeners = new ArrayList<BarramentoListener>();
-    private final List<BarramentoListener> novosListeners = new ArrayList<BarramentoListener>();
+    private final Queue<Event<?>> mensagens = new ConcurrentLinkedQueue<Event<?>>();
+    private final List<EventListener> listeners = new ArrayList<EventListener>();
+    private final List<EventListener> novosListeners = new ArrayList<EventListener>();
 
     Fila() {
         /* Proibe instâncias fora do package. */
     }
 
-    final synchronized void adicionarListener(final BarramentoListener listener) {
+    final synchronized void adicionarListener(final EventListener listener) {
         novosListeners.add(listener);
     }
 
-    final synchronized void removerListener(final BarramentoListener listener) {
+    final synchronized void removerListener(final EventListener listener) {
         novosListeners.remove(listener);
     }
 
-    final void adicionarMensagem(final Mensagem<?> mensagem) {
+    final void adicionarMensagem(final Event<?> mensagem) {
         mensagens.add(mensagem);
     }
 
@@ -55,7 +55,7 @@ class Fila implements Runnable {
         }
 
         int numeroMensagensTratadas = 0;
-        Mensagem<?> mensagem = null;
+        Event<?> mensagem = null;
         while ((mensagem = mensagens.poll()) != null) {
 
             numeroMensagensTratadas++;
@@ -65,9 +65,9 @@ class Fila implements Runnable {
                 logger.debug("Mensagens: #consumidas={}, #restantes={}.", numeroMensagensTratadas, mensagens.size());
             }
 
-            final Iterator<? extends BarramentoListener> iterator = listeners.iterator();
+            final Iterator<? extends EventListener> iterator = listeners.iterator();
             while (iterator.hasNext()) {
-                final BarramentoListener listener = iterator.next();
+                final EventListener listener = iterator.next();
                 if (listener == null) {
                     iterator.remove();
                     continue;
