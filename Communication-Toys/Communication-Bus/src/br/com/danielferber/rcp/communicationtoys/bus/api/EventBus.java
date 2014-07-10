@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 public class EventBus {
 
     private static final Logger logger = LoggerFactory.getLogger(EventBus.class);
-    private final Fila fila = new Fila();
+    private final EventQueue fila = new EventQueue();
     private final ReentrantLock semaforo = new ReentrantLock();
 
     private static final Map<Object, Map<String, EventBus>> EVENT_BUS_BY_CONTEXT_CATEGORY = new WeakHashMap<Object, Map<String, EventBus>>();

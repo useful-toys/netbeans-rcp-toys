@@ -16,14 +16,14 @@ import org.slf4j.LoggerFactory;
  *
  * @author x7ws - Daniel Felix Ferber
  */
-class Fila implements Runnable {
+class EventQueue implements Runnable {
 
-    private static final Logger logger = LoggerFactory.getLogger(Fila.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(EventQueue.class.getName());
     private final Queue<Event<?>> mensagens = new ConcurrentLinkedQueue<Event<?>>();
     private final List<EventListener> listeners = new ArrayList<EventListener>();
     private final List<EventListener> novosListeners = new ArrayList<EventListener>();
 
-    Fila() {
+    EventQueue() {
         /* Proibe instâncias fora do package. */
     }
 
@@ -73,7 +73,7 @@ class Fila implements Runnable {
                     continue;
                 }
                 try {
-                    if (mensagem.isCompativel(listener)) {
+                    if (mensagem.isCompatible(listener)) {
                         logger.debug("Executar mensagem. listener={}", listener);
                         mensagem.executarCaller(listener);
                     }
