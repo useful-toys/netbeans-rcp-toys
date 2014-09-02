@@ -21,18 +21,17 @@ class EventQueue implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(EventQueue.class.getName());
     private final Queue<Event<?>> mensagens = new ConcurrentLinkedQueue<Event<?>>();
     private final List<EventListener> listeners = new ArrayList<EventListener>();
-    private final List<EventListener> novosListeners = new ArrayList<EventListener>();
 
     EventQueue() {
         /* Proibe instâncias fora do package. */
     }
 
     final synchronized void adicionarListener(final EventListener listener) {
-        novosListeners.add(listener);
+        listeners.add(listener);
     }
 
     final synchronized void removerListener(final EventListener listener) {
-        novosListeners.remove(listener);
+        listeners.remove(listener);
     }
 
     final void adicionarMensagem(final Event<?> mensagem) {
@@ -46,12 +45,9 @@ class EventQueue implements Runnable {
             logger.debug("Mensagens: #consumidas={}, #restantes={}.", 0, mensagens.size());
         }
 
+        final List<EventListener> listeners;
         synchronized (this) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Listeners: #existentes={}, #novos={}.", listeners.size(), novosListeners.size());
-            }
-            listeners.addAll(novosListeners);
-            novosListeners.clear();
+            listeners = new ArrayList<EventListener>(this.listeners);
         }
 
         int numeroMensagensTratadas = 0;

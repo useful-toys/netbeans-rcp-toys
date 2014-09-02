@@ -2,7 +2,6 @@
  */
 package br.com.danielferber.rcp.loggertoys.configuration;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -12,12 +11,10 @@ import java.util.logging.Logger;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.modules.OnStart;
-import org.openide.util.Exceptions;
 
 @OnStart
 public final class Installer implements Runnable {
 
-    private static LoggerFileChangeListener loggerAttributesFileListener;
 
     @Override
     public void run() {
@@ -53,8 +50,6 @@ public final class Installer implements Runnable {
         }
 
         if (loggerFolder != null) {
-            loggerAttributesFileListener = new LoggerFileChangeListener();
-            loggerFolder.addFileChangeListener(loggerAttributesFileListener);
             LoggerConfigurationUtils.readLoggerLevelFromFileObject(loggerFolder);
         }
 

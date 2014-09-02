@@ -19,7 +19,6 @@ import org.netbeans.api.progress.ProgressUtils;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
 import org.openide.NotificationLineSupport;
-import org.openide.util.Exceptions;
 import org.openide.util.NbPreferences;
 
 @ServiceProvider(service = ProcessoAutenticacaoService.class)
@@ -95,6 +94,8 @@ public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoServi
                     contadorTentativas++;
                     notificationLine.setErrorMessage("Estas credenciais não esão ativas.");
                 } else if (ex instanceof AutenticacaoException.ServicoIndisponivel) {
+                    throw new ProcessoAutenticacaoException.ServicoIndisponivel();
+                } else {
                     throw new ProcessoAutenticacaoException.ServicoIndisponivel();
                 }
             }
