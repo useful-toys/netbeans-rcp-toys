@@ -31,7 +31,9 @@
                     </run-dependency>
                 </dependency>
             </module-dependencies>
-            <public-packages/>
+            <public-packages>
+                <package>br.com.danielferber.rcp.communicationtoys.bus.api</package>
+            </public-packages>
         </data>
     </configuration>
 </project>
