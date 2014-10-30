@@ -5,6 +5,8 @@
  */
 package br.com.danielferber.rcp.securitytoys.api;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.openide.util.Lookup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,4 +42,7 @@ public abstract class SegurancaService {
     public abstract AutenticacaoException getLoginException();
 
     public abstract void logoff();
+    
+    public abstract void register(SegurancaListener listener);
+    public abstract void unregister(SegurancaListener listener);
 }

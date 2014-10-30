@@ -7,7 +7,9 @@ import br.com.danielferber.rcp.securitytoys.api.SegurancaProvider;
 import br.com.danielferber.rcp.securitytoys.api.SegurancaService;
 import static br.com.danielferber.rcp.securitytoys.api.SegurancaService.LOGGER;
 import br.com.danielferber.rcp.securitytoys.api.UsuarioAutenticado;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import org.openide.util.Lookup;
 
 /**
@@ -19,6 +21,7 @@ public class SegurancaServicePadrao extends SegurancaService {
 
     protected UsuarioAutenticado usuarioAutenticado;
     protected AutenticacaoException lastLoginException;
+    protected final List<SegurancaListener> listeners = new ArrayList<SegurancaListener>();
 
     public SegurancaServicePadrao() {
         super();
@@ -125,10 +128,28 @@ public class SegurancaServicePadrao extends SegurancaService {
                 LOGGER.error("Falha em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", usuario, listener);
             }
         }
+        for (final SegurancaListener listener : listeners) {
+            try {
+                listener.notificarAutenticacao(usuario);
+                LOGGER.info("Sucesso em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", usuario, listener);
+            } catch (final RuntimeException e) {
+                LOGGER.error("Falha em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", usuario, listener);
+            }
+        }
     }
 
     @Override
     public boolean isDisponivel() {
         return lookupSegurancaProvider().isDisponivel();
+    }
+
+    @Override
+    public void register(SegurancaListener listener) {
+        listeners.add(listener);
+    }
+
+    @Override
+    public void unregister(SegurancaListener listener) {
+        listeners.remove(listener);
     }
 }
