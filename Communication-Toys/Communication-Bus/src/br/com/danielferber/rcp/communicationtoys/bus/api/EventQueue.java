@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import org.openide.util.Lookup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +50,7 @@ class EventQueue implements Runnable {
         synchronized (this) {
             listeners = new ArrayList<EventListener>(this.listeners);
         }
+        listeners.addAll(Lookup.getDefault().lookupAll(EventListener.class));
 
         int numeroMensagensTratadas = 0;
         Event<?> mensagem = null;
