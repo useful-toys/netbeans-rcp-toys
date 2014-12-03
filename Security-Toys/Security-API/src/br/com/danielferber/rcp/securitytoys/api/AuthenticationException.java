@@ -8,12 +8,12 @@ public class AuthenticationException extends Exception {
     private final String login;
 
     public AuthenticationException(final String login) {
-        super("Autenticação recusada.");
+        super("Authentication refused.");
         this.login = login;
     }
     
     public AuthenticationException(final Exception e) {
-        super("Autenticação recusada.", e);
+        super("Authentication refused.", e);
         this.login = null;
     }
 
@@ -21,9 +21,9 @@ public class AuthenticationException extends Exception {
         return login;
     }
     
-    public static class IncorrentCredentials extends AuthenticationException {
+    public static class IncorrectCredentials extends AuthenticationException {
 
-        public IncorrentCredentials(String login) {
+        public IncorrectCredentials(String login) {
             super(login);
         }
     }

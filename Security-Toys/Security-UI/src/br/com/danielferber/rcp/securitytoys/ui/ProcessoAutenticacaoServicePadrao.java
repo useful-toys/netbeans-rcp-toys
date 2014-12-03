@@ -9,10 +9,9 @@ package br.com.danielferber.rcp.securitytoys.ui;
  *
  * @author Daniel
  */
-import org.openide.util.lookup.ServiceProvider;
-import br.com.danielferber.rcp.securitytoys.api.AutenticacaoException;
-import br.com.danielferber.rcp.securitytoys.api.SegurancaService;
-import br.com.danielferber.rcp.securitytoys.api.UsuarioAutenticado;
+import br.com.danielferber.rcp.securitytoys.api.AuthenticatedUser;
+import br.com.danielferber.rcp.securitytoys.api.AuthenticationException;
+import br.com.danielferber.rcp.securitytoys.api.SecurityService;
 import br.com.danielferber.rcp.securitytoys.auth.api.ProcessoAutenticacaoException;
 import br.com.danielferber.rcp.securitytoys.auth.api.ProcessoAutenticacaoService;
 import org.netbeans.api.progress.ProgressUtils;
@@ -20,6 +19,7 @@ import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
 import org.openide.NotificationLineSupport;
 import org.openide.util.NbPreferences;
+import org.openide.util.lookup.ServiceProvider;
 
 @ServiceProvider(service = ProcessoAutenticacaoService.class)
 public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoService {
@@ -30,9 +30,9 @@ public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoServi
     private static final int MAXIMO_TENTATIVAS = 3;
 
     @Override
-    public UsuarioAutenticado executarAutenticacao() throws ProcessoAutenticacaoException {
+    public AuthenticatedUser executarAutenticacao() throws ProcessoAutenticacaoException {
 
-        if (!SegurancaService.getDefault().isDisponivel()) {
+        if (!SecurityService.Lookup.getDefault().isServiceAvailable()) {
             throw new ProcessoAutenticacaoException.ServicoIndisponivel();
         }
 
@@ -72,28 +72,28 @@ public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoServi
                     @Override
                     public void run() {
                         try {
-                            SegurancaService.getDefault().login(login, senha);
+                            SecurityService.Lookup.getDefault().login(login, senha);
                             NbPreferences.forModule(ProcessoAutenticacaoServicePadrao.class).put("login", login);
-                        } catch (AutenticacaoException ex) {
+                        } catch (AuthenticationException ex) {
                             // ignora
                         }
                     }
                 }, "Validar credenciais...");
 
-                AutenticacaoException ex = SegurancaService.getDefault().getLoginException();
+                Exception ex = SecurityService.Lookup.getDefault().getLastLoginException();
                 if (ex == null) {
                     /* Se a execução chegou aqui, então o login foi aceito. */
-                    return SegurancaService.getDefault().getUsuario();
-                } else if (ex instanceof AutenticacaoException.CredenciaisIncorretas) {
+                    return SecurityService.Lookup.getDefault().getCurrentAuthenticatedUser();
+                } else if (ex instanceof AuthenticationException.IncorrectCredentials) {
                     contadorTentativas++;
                     notificationLine.setErrorMessage("Estas credenciais estão incorretas.");
-                } else if (ex instanceof AutenticacaoException.UsuarioInexistente) {
+                } else if (ex instanceof AuthenticationException.InexistingUser) {
                     contadorTentativas++;
                     notificationLine.setErrorMessage("Estas credenciais estão incorretas.");
-                } else if (ex instanceof AutenticacaoException.UsuarioInativo) {
+                } else if (ex instanceof AuthenticationException.InactiveUser) {
                     contadorTentativas++;
                     notificationLine.setErrorMessage("Estas credenciais não esão ativas.");
-                } else if (ex instanceof AutenticacaoException.ServicoIndisponivel) {
+                } else if (ex instanceof AuthenticationException.UnavailableService) {
                     throw new ProcessoAutenticacaoException.ServicoIndisponivel();
                 } else {
                     throw new ProcessoAutenticacaoException.ServicoIndisponivel();
@@ -110,8 +110,8 @@ public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoServi
             @Override
             public void run() {
                 try {
-                    if (SegurancaService.getDefault().getUsuario() != null) {
-                        SegurancaService.getDefault().logoff();
+                    if (SecurityService.Lookup.getDefault().getCurrentAuthenticatedUser()!= null) {
+                        SecurityService.Lookup.getDefault().logoff();
                     }
                 } catch (Exception ex) {
                     // ignora

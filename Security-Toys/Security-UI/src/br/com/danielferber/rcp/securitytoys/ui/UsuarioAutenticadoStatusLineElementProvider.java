@@ -5,9 +5,9 @@
  */
 package br.com.danielferber.rcp.securitytoys.ui;
 
-import br.com.danielferber.rcp.securitytoys.api.SegurancaListener;
-import br.com.danielferber.rcp.securitytoys.api.SegurancaService;
-import br.com.danielferber.rcp.securitytoys.api.UsuarioAutenticado;
+import br.com.danielferber.rcp.securitytoys.api.AuthenticatedUser;
+import br.com.danielferber.rcp.securitytoys.api.AuthenticationListener;
+import br.com.danielferber.rcp.securitytoys.api.SecurityService;
 import java.awt.Component;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
@@ -17,9 +17,9 @@ import org.openide.util.lookup.ServiceProviders;
 
 @ServiceProviders({
     @ServiceProvider(service = StatusLineElementProvider.class, position = 1),
-    @ServiceProvider(service = SegurancaListener.class)
+    @ServiceProvider(service = AuthenticationListener.class)
 })
-public class UsuarioAutenticadoStatusLineElementProvider implements StatusLineElementProvider, SegurancaListener {
+public class UsuarioAutenticadoStatusLineElementProvider implements StatusLineElementProvider, AuthenticationListener {
 
     private JLabel usuarioLabel;
 
@@ -36,7 +36,7 @@ public class UsuarioAutenticadoStatusLineElementProvider implements StatusLineEl
     }
 
     @Override
-    public void notificarAutenticacao(final UsuarioAutenticado usuario) {
+    public void notificarAutenticacao(final AuthenticatedUser usuario) {
         if (usuarioLabel != null) {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
@@ -48,7 +48,7 @@ public class UsuarioAutenticadoStatusLineElementProvider implements StatusLineEl
     }
 
     private String obterStringNomeUsuario() {
-        final UsuarioAutenticado usuario = SegurancaService.getDefault().getUsuario();
+        final AuthenticatedUser usuario = SecurityService.Lookup.getDefault().getCurrentAuthenticatedUser();
         if (usuario == null) {
             return "Anônimo";
         } else {

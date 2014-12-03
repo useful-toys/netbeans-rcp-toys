@@ -1,6 +1,6 @@
 package br.com.danielferber.rcp.securitytoys.ui;
 
-import br.com.danielferber.rcp.securitytoys.api.SegurancaService;
+import br.com.danielferber.rcp.securitytoys.api.SecurityService;
 import java.util.concurrent.Callable;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
@@ -11,7 +11,7 @@ public class AuthenticacaoOnStop implements Callable<Boolean> {
 
     @Override
     public Boolean call() throws Exception {
-        if (SegurancaService.getDefault().getUsuario() != null) {
+        if (SecurityService.Lookup.getDefault().getCurrentAuthenticatedUser() != null) {
             NotifyDescriptor d = new NotifyDescriptor("Finalizar aplicação?", "Pergunta",
                     NotifyDescriptor.YES_NO_OPTION, NotifyDescriptor.QUESTION_MESSAGE,
                     null, null);

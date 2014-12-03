@@ -6,8 +6,6 @@
 package br.com.danielferber.rcp.securitytoys.mock;
 
 import br.com.danielferber.rcp.securitytoys.api.AutorizacaoException;
-import br.com.danielferber.rcp.securitytoys.api.SegurancaProvider;
-import br.com.danielferber.rcp.securitytoys.api.UsuarioAutenticado;
 import br.com.danielferber.rcp.securitytoys.core.UsuarioAutenticadoPadrao;
 import java.util.Collections;
 import org.openide.util.lookup.ServiceProvider;

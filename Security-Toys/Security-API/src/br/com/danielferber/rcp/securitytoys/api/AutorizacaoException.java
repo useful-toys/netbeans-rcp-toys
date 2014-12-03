@@ -6,9 +6,9 @@ package br.com.danielferber.rcp.securitytoys.api;
 public class AutorizacaoException extends Exception {
 
     private final String nomeRecurso;
-    private final UsuarioAutenticado usuario;
+    private final AuthenticatedUser usuario;
 
-    public AutorizacaoException(final UsuarioAutenticado usuario, final String nomeRecurso) {
+    public AutorizacaoException(final AuthenticatedUser usuario, final String nomeRecurso) {
         super("Autorização recusada.");
         this.nomeRecurso = nomeRecurso;
         this.usuario = usuario;
@@ -24,7 +24,7 @@ public class AutorizacaoException extends Exception {
     /**
      * @return O usuário para o qual a autorização foi recusada.
      */
-    public UsuarioAutenticado getUsuario() {
+    public AuthenticatedUser getUsuario() {
         return usuario;
     }
 
@@ -33,7 +33,7 @@ public class AutorizacaoException extends Exception {
      */
     public static class NaoAutenticado extends AutorizacaoException {
 
-        public NaoAutenticado(UsuarioAutenticado usuario, String nomeRecurso) {
+        public NaoAutenticado(AuthenticatedUser usuario, String nomeRecurso) {
             super(usuario, nomeRecurso);
         }
     }
@@ -44,7 +44,7 @@ public class AutorizacaoException extends Exception {
      */
     public static class NaoAutorizado extends AutorizacaoException {
 
-        public NaoAutorizado(UsuarioAutenticado usuario, String nomeRecurso) {
+        public NaoAutorizado(AuthenticatedUser usuario, String nomeRecurso) {
             super(usuario, nomeRecurso);
         }
     }

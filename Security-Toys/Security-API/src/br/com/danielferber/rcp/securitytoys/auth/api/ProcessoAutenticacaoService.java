@@ -4,7 +4,7 @@
  */
 package br.com.danielferber.rcp.securitytoys.auth.api;
 
-import br.com.danielferber.rcp.securitytoys.api.UsuarioAutenticado;
+import br.com.danielferber.rcp.securitytoys.api.AuthenticatedUser;
 import org.openide.util.Lookup;
 
 public abstract class ProcessoAutenticacaoService {
@@ -21,7 +21,7 @@ public abstract class ProcessoAutenticacaoService {
         return instance;
     }
 
-    public abstract UsuarioAutenticado executarAutenticacao() throws ProcessoAutenticacaoException;
+    public abstract AuthenticatedUser executarAutenticacao() throws ProcessoAutenticacaoException;
     public abstract void executarLogoff();
 
     

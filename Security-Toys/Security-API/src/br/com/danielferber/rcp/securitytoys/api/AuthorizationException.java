@@ -5,47 +5,46 @@ package br.com.danielferber.rcp.securitytoys.api;
  */
 public class AuthorizationException extends Exception {
 
-    private final String nomeRecurso;
-    private final UsuarioAutenticado usuario;
+    private final String resourceName;
+    private final AuthenticatedUser authenticatedUser;
 
-    public AuthorizationException(final UsuarioAutenticado usuario, final String nomeRecurso) {
-        super("Autorização recusada.");
-        this.nomeRecurso = nomeRecurso;
-        this.usuario = usuario;
+    public AuthorizationException(final AuthenticatedUser authenticatedUser, final String resourceName) {
+        super("Authorization refused.");
+        this.resourceName = resourceName;
+        this.authenticatedUser = authenticatedUser;
     }
 
     /**
-     * @return O recurso ou a funcionalidade cuja autorização foi recusada.
+     * @return The resource name that was not granted.
      */
-    public String getNomeRecurso() {
-        return nomeRecurso;
+    public String getResourceName() {
+        return resourceName;
     }
 
     /**
-     * @return O usuário para o qual a autorização foi recusada.
+     * @return The authenticated user, if available.
      */
-    public UsuarioAutenticado getUsuario() {
-        return usuario;
+    public AuthenticatedUser getAuthenticatedUser() {
+        return authenticatedUser;
     }
 
     /**
-     * O usuário ainda não foi autenticado.
+     * Authorization refused as the user has not yet been authenticated.
      */
-    public static class NaoAutenticado extends AuthorizationException {
+    public static class NotAuthenticated extends AuthorizationException {
 
-        public NaoAutenticado(UsuarioAutenticado usuario, String nomeRecurso) {
-            super(usuario, nomeRecurso);
+        public NotAuthenticated(AuthenticatedUser authenticatedUser, String resourceName) {
+            super(authenticatedUser, resourceName);
         }
     }
 
     /**
-     * O usuário não possui autorização para acessar um recurso ou uma
-     * funcionalidade.
+     * Authorization refused as the resource has not been granted to the user.
      */
-    public static class NaoAutorizado extends AuthorizationException {
+    public static class NotAuthorized extends AuthorizationException {
 
-        public NaoAutorizado(UsuarioAutenticado usuario, String nomeRecurso) {
-            super(usuario, nomeRecurso);
+        public NotAuthorized(AuthenticatedUser authenticatedUser, String resourceName) {
+            super(authenticatedUser, resourceName);
         }
     }
 }

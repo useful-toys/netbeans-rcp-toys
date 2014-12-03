@@ -1,5 +1,0 @@
-Manifest-Version: 1.0
-OpenIDE-Module: br.com.danielferber.rcp.securitytoys.mock
-OpenIDE-Module-Localizing-Bundle: br/com/danielferber/rcp/securitytoys/mock/Bundle.properties
-OpenIDE-Module-Specification-Version: 1.0
-
