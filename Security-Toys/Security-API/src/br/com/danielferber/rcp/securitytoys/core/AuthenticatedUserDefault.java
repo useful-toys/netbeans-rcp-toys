@@ -3,11 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package br.com.danielferber.rcp.securitytoys.impl;
+package br.com.danielferber.rcp.securitytoys.core;
 
-import br.com.danielferber.rcp.securitytoys.api.AutorizacaoException;
-import br.com.danielferber.rcp.securitytoys.api.SecurityService;
 import br.com.danielferber.rcp.securitytoys.api.AuthenticatedUser;
+import br.com.danielferber.rcp.securitytoys.api.AuthorizationException;
+import br.com.danielferber.rcp.securitytoys.api.SecurityService;
 import java.util.Collections;
 import java.util.Set;
 
@@ -33,7 +33,7 @@ public class AuthenticatedUserDefault implements AuthenticatedUser {
     }
 
     @Override
-    public String getNome() {
+    public String getName() {
         return nome;
     }
 
@@ -42,16 +42,16 @@ public class AuthenticatedUserDefault implements AuthenticatedUser {
         return perfis;
     }
 
-    protected AutorizacaoException avaliaPermissao(String nomeRecurso) {
+    protected AuthorizationException avaliaPermissao(String nomeRecurso) {
         if (! this.perfis.contains(nomeRecurso)) {
-            return new AutorizacaoException.NaoAutorizado(this, nomeRecurso);
+            return new AuthorizationException.NotAuthorized(this, nomeRecurso);
         }
         return null;
     }
 
     @Override
-    public final boolean temPermissao(final String recurso) {
-        final AutorizacaoException motivo = avaliaPermissao(recurso);
+    public final boolean isResourceGranted(final String recurso) {
+        final AuthorizationException motivo = avaliaPermissao(recurso);
         if (motivo == null) {
             SecurityService.LOGGER.debug("Permissão concedida. login={}; recurso={}", getLogin(), recurso);
         } else {
@@ -61,8 +61,8 @@ public class AuthenticatedUserDefault implements AuthenticatedUser {
     }
 
     @Override
-    public final void garantePermissao(final String recurso) throws AutorizacaoException {
-        final AutorizacaoException motivo = avaliaPermissao(recurso);
+    public final void resourceGranted(final String recurso) throws AuthorizationException {
+        final AuthorizationException motivo = avaliaPermissao(recurso);
         if (motivo == null) {
             SecurityService.LOGGER.debug("Permissão concedida. login={}; recurso={}", getLogin(), recurso);
         } else {

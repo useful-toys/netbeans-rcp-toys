@@ -15,7 +15,7 @@ public interface AuthenticatedUser {
 
     String getLogin();
 
-    String getNome();
+    String getName();
 
     Set<String> getPerfis();
 
@@ -24,11 +24,11 @@ public interface AuthenticatedUser {
      * este método para decidir se o item de interface associado ao recurso está
      * visível ou habilitado.
      *
-     * @param nomeRecurso Nome do recurso para verificar.
+     * @param resouceName Nome do recurso para verificar.
      * @return <code>true</code> se o usuário está autorizado a acessar o
      * recurso. <code>false</code> caso contrário.
      */
-    boolean temPermissao(final String nomeRecurso);
+    boolean isResourceGranted(final String resouceName);
     
     /**
      * Lança uma exceção se o usuário não está autorizado a acessar o recurso
@@ -38,5 +38,5 @@ public interface AuthenticatedUser {
      * @throws AutorizacaoException se o usuário não está autorizado a
      * acessar o recurso.
      */
-    void garantePermissao(final String nomeRecurso) throws AutorizacaoException; 
+    void resourceGranted(final String nomeRecurso) throws AuthorizationException; 
 }
