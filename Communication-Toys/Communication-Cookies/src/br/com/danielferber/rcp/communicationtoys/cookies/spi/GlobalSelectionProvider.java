@@ -14,12 +14,17 @@ import org.openide.util.lookup.ServiceProvider;
  *
  * @author Daniel Felix Ferber
  */
-@ServiceProvider(service = ContextGlobalProvider.class)
+@ServiceProvider(service = ContextGlobalProvider.class,
+        supersedes = "org.netbeans.modules.openide.windows.GlobalActionContextImpl")
 public class GlobalSelectionProvider implements ContextGlobalProvider {
 
+    public GlobalSelectionProvider() {
+        super();
+    }
+    
     @Override
     public Lookup createGlobalContext() {
         return CookieService.Lookup.getDefault().getContext();
     }
-    
+
 }
