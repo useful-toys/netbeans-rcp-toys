@@ -52,7 +52,7 @@ public class UsuarioAutenticadoStatusLineElementProvider implements StatusLineEl
         if (usuario == null) {
             return "Anônimo";
         } else {
-            return usuario.getNome();
+            return usuario.getName();
         }
     }
 
