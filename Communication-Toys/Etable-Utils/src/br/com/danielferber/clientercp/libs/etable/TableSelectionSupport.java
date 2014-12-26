@@ -67,7 +67,7 @@ public class TableSelectionSupport<RowType extends Object> {
                 final RowType rowObject = tableModel.getRowObject(indice);
                 selection.put(rowId, rowObject);
             }
-            CookieService.Lookup.getDefault().updateSelection(selection);
+            CookieService.Lookup.getDefault().setSelectionObjects(selection);
         }
     }
 }
