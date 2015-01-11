@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.util.lookup.AbstractLookup;
@@ -25,14 +26,18 @@ import org.openide.util.lookup.ServiceProvider;
  * @author Daniel Felix Ferber
  */
 @ServiceProvider(service = CookieService.class)
-public class CookieFactoryImpl implements CookieService {
+public class CookieServiceImpl implements CookieService {
 
+    private final Logger logger = Logger.getLogger(CookieService.class.getName());
+
+    private InstanceContent exportedContent = new InstanceContent();
     private InstanceContent localContent = null;
     private final InstanceContent staticContent = new InstanceContent();
     private final InstanceContent selectionContent1 = new InstanceContent();
     private final InstanceContent selectionContent2 = new InstanceContent();
     private final InstanceContent focusContent1 = new InstanceContent();
     private final InstanceContent focusContent2 = new InstanceContent();
+    private final org.openide.util.Lookup exportedLookup = new AbstractLookup(exportedContent);
     private final org.openide.util.Lookup staticLookup = new AbstractLookup(staticContent);
     private final org.openide.util.Lookup selectionLookup1 = new AbstractLookup(selectionContent1);
     private final org.openide.util.Lookup selectionLookup2 = new AbstractLookup(selectionContent2);
@@ -40,24 +45,36 @@ public class CookieFactoryImpl implements CookieService {
     private final org.openide.util.Lookup focusLookup2 = new AbstractLookup(focusContent2);
     private final org.openide.util.Lookup globalLookup = new ProxyLookup(staticLookup, selectionLookup1, selectionLookup2, focusLookup1, focusLookup2);
     private final org.openide.util.Lookup.Result<Object> globalLookupResult = globalLookup.lookupResult(Object.class);
-
-    public CookieFactoryImpl() {
-        super();
-        globalLookupResult.addLookupListener(new LookupListener() {
-            @Override
-            public void resultChanged(LookupEvent ev) {
-                if (localContent != null) {
-                    localContent.set(globalLookupResult.allInstances(), null);
-                }
+    final LookupListener globalLookupListener = new LookupListener() {
+        @Override
+        public void resultChanged(LookupEvent ev) {
+            if (localContent != null) {
+                final Collection<? extends Object> allInstances = globalLookupResult.allInstances();
+                logger.info("Copy " + allInstances.size() + " objects");
+                localContent.set(allInstances, null);
             }
-        });
+        }
+    };
+    final LookupListener globalLookupListener2 = new LookupListener() {
+        @Override
+        public void resultChanged(LookupEvent ev) {
+            final Collection<? extends Object> allInstances = globalLookupResult.allInstances();
+            logger.info("Export " + allInstances.size() + " objects");
+            exportedContent.set(allInstances, null);
+        }
+    };
+
+    public CookieServiceImpl() {
+        super();
+        globalLookupResult.addLookupListener(globalLookupListener);
+        globalLookupResult.addLookupListener(globalLookupListener2);
     }
 
     @Override
-
     public org.openide.util.Lookup getContext() {
+        return exportedLookup;
 //        return globalLookup;
-        return staticLookup;
+//        return staticLookup;
     }
 
     @Override
@@ -69,8 +86,10 @@ public class CookieFactoryImpl implements CookieService {
             cookiesCreated |= provider.createStaticCookies(cookiesRepository);
         }
         if (cookiesCreated) {
+            logger.info("Set " + cookiesRepository.size() + " static cookies");
             staticContent.set(cookiesRepository, null);
         } else {
+            logger.info("Set zero static cookies");
             staticContent.set(Collections.EMPTY_LIST, null);
         }
     }
@@ -88,8 +107,10 @@ public class CookieFactoryImpl implements CookieService {
             cookiesCreated |= provider.createSelectionCookies(focusObjects, cookiesRepository);
         }
         if (cookiesCreated) {
+            logger.info("Set " + cookiesRepository.size() + " focus cookies");
             focusContent1.set(cookiesRepository, null);
         } else {
+            logger.info("Set zero static cookies");
             focusContent1.set(Collections.EMPTY_LIST, null);
         }
     }
@@ -138,8 +159,10 @@ public class CookieFactoryImpl implements CookieService {
             cookiesCreated |= provider.createSelectionCookies(selectionObjects, cookiesRepository);
         }
         if (cookiesCreated) {
+            logger.info("Set " + cookiesRepository.size() + " selection cookies");
             selectionContent1.set(cookiesRepository, null);
         } else {
+            logger.info("Set zero selection cookies");
             selectionContent1.set(Collections.EMPTY_LIST, null);
         }
     }
