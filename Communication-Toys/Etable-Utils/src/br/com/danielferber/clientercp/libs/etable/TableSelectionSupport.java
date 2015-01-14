@@ -8,9 +8,9 @@ package br.com.danielferber.clientercp.libs.etable;
 import br.com.danielferber.rcp.communicationtoys.cookies.api.CookieService;
 import java.util.HashMap;
 import java.util.Map;
-import javax.swing.JTable;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import org.netbeans.swing.etable.ETable;
 
 /**
  *
@@ -19,10 +19,10 @@ import javax.swing.event.ListSelectionListener;
  */
 public class TableSelectionSupport<RowType extends Object> {
 
-    private final JTable table;
+    private final ETable table;
     private ListSelectionListener listSelectionListener;
 
-    public TableSelectionSupport(JTable table) {
+    public TableSelectionSupport(ETable table) {
         this.table = table;
     }
 
@@ -63,6 +63,7 @@ public class TableSelectionSupport<RowType extends Object> {
 
             Map<String, RowType> selection = new HashMap<>();
             for (int indice : rowIndex) {
+                indice = table.convertRowIndexToModel(indice);
                 final String rowId = tableModel.getRowId(indice);
                 final RowType rowObject = tableModel.getRowObject(indice);
                 selection.put(rowId, rowObject);

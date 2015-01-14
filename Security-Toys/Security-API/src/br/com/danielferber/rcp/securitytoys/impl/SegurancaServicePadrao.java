@@ -46,7 +46,7 @@ public class SegurancaServicePadrao implements SecurityService {
 
         delegarLogoff();
 
-        notificarUsuarioAutenticado(null);
+//        notificarUsuarioAutenticado(null);
     }
     
     @Override
