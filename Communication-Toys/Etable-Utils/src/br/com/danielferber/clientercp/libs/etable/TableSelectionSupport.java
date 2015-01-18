@@ -42,6 +42,31 @@ public class TableSelectionSupport<RowType extends Object> {
         return this;
     }
 
+    public void atualizar() {
+        final Map<String, RowType> selection = calculateSelection();
+        if (selection == null) {
+            CookieService.Lookup.getDefault().clearSelection();
+            return;
+        }
+        CookieService.Lookup.getDefault().setSelectionObjects(selection);
+    }
+
+    private Map<String, RowType> calculateSelection() {
+        final ColumnDrivenTableModel<RowType> tableModel = (ColumnDrivenTableModel<RowType>) table.getModel();
+        final int[] rowIndex = table.getSelectedRows();
+        if (rowIndex.length == 0) {
+            return null;
+        }
+        Map<String, RowType> selection = new HashMap<>();
+        for (int indice : rowIndex) {
+            indice = table.convertRowIndexToModel(indice);
+            final String rowId = tableModel.getRowId(indice);
+            final RowType rowObject = tableModel.getRowObject(indice);
+            selection.put(rowId, rowObject);
+        }
+        return selection;
+    }
+
     private ListSelectionListener createListener() {
         return new SelectionListener();
     }
@@ -53,22 +78,7 @@ public class TableSelectionSupport<RowType extends Object> {
             if (e.getValueIsAdjusting()) {
                 return;
             }
-
-            int[] rowIndex = table.getSelectedRows();
-            if (rowIndex.length == 0) {
-                CookieService.Lookup.getDefault().clearSelection();
-                return;
-            }
-            final ColumnDrivenTableModel<RowType> tableModel = (ColumnDrivenTableModel<RowType>) table.getModel();
-
-            Map<String, RowType> selection = new HashMap<>();
-            for (int indice : rowIndex) {
-                indice = table.convertRowIndexToModel(indice);
-                final String rowId = tableModel.getRowId(indice);
-                final RowType rowObject = tableModel.getRowObject(indice);
-                selection.put(rowId, rowObject);
-            }
-            CookieService.Lookup.getDefault().setSelectionObjects(selection);
+            atualizar();
         }
     }
 }
