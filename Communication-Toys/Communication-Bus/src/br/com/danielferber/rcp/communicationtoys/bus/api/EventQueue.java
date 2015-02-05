@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
  * Fila de mensagens do barramento, com os respectivos listeners que consomem as
  * mensagens.
  *
- * @author x7ws - Daniel Felix Ferber
+ * @author Daniel Felix Ferber
  */
 class EventQueue implements Runnable {
 

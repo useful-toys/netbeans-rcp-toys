@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * mensagens de todos os barramentos. A Task é re-agendada ou re-iniciada quando
  * novas mensagens são adicionadas a uma dos barramentos.
  *
- * @author X7WS
+ * @author Daniel Felix Ferber
  */
 public class EventBus {
 

@@ -5,7 +5,7 @@ package br.com.danielferber.rcp.communicationtoys.bus.api;
  * implement the interface passed to the constructor.
  *
  * @param <ListenerType> The type of Listeners called for this Event.
- * @author X7WS
+ * @author Daniel Felix Ferber
  */
 public abstract class Event<ListenerType extends EventListener> {
 
