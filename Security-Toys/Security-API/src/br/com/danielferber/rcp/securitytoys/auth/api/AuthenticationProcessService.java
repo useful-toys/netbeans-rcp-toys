@@ -7,22 +7,22 @@ package br.com.danielferber.rcp.securitytoys.auth.api;
 import br.com.danielferber.rcp.securitytoys.api.AuthenticatedUser;
 import org.openide.util.Lookup;
 
-public abstract class ProcessoAutenticacaoService {
+public abstract class AuthenticationProcessService {
 
-    protected ProcessoAutenticacaoService() {
+    protected AuthenticationProcessService() {
         super();
     }
 
-    public static final ProcessoAutenticacaoService getDefault() {
-        final ProcessoAutenticacaoService instance = Lookup.getDefault().lookup(ProcessoAutenticacaoService.class);
+    public static final AuthenticationProcessService getDefault() {
+        final AuthenticationProcessService instance = Lookup.getDefault().lookup(AuthenticationProcessService.class);
         if (instance == null) {
             throw new IllegalStateException("Nenhum módulo provê ProcessoAutenticacaoService.");
         }
         return instance;
     }
 
-    public abstract AuthenticatedUser executarAutenticacao() throws ProcessoAutenticacaoException;
-    public abstract void executarLogoff();
+    public abstract AuthenticatedUser executeAuthenticationQuery() throws AuthenticationProcessException;
+    public abstract void executeLogoff();
 
     
 

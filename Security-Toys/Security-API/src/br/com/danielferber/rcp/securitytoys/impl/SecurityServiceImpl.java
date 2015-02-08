@@ -16,13 +16,13 @@ import org.openide.util.lookup.ServiceProvider;
  * @author X7WS
  */
 @ServiceProvider(service = SecurityService.class)
-public class SegurancaServicePadrao implements SecurityService {
+public class SecurityServiceImpl implements SecurityService {
 
     protected AuthenticatedUser currentAuthenticatedUser;
     protected Exception lastLoginException;
     protected final List<AuthenticationListener> listeners = new ArrayList<AuthenticationListener>();
 
-    public SegurancaServicePadrao() {
+    public SecurityServiceImpl() {
         super();
         this.currentAuthenticatedUser = null;
     }

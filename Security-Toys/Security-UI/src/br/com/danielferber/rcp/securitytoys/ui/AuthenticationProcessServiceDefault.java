@@ -12,8 +12,8 @@ package br.com.danielferber.rcp.securitytoys.ui;
 import br.com.danielferber.rcp.securitytoys.api.AuthenticatedUser;
 import br.com.danielferber.rcp.securitytoys.api.AuthenticationException;
 import br.com.danielferber.rcp.securitytoys.api.SecurityService;
-import br.com.danielferber.rcp.securitytoys.auth.api.ProcessoAutenticacaoException;
-import br.com.danielferber.rcp.securitytoys.auth.api.ProcessoAutenticacaoService;
+import br.com.danielferber.rcp.securitytoys.auth.api.AuthenticationProcessException;
+import br.com.danielferber.rcp.securitytoys.auth.api.AuthenticationProcessService;
 import org.netbeans.api.progress.ProgressUtils;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
@@ -21,24 +21,24 @@ import org.openide.NotificationLineSupport;
 import org.openide.util.NbPreferences;
 import org.openide.util.lookup.ServiceProvider;
 
-@ServiceProvider(service = ProcessoAutenticacaoService.class)
-public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoService {
+@ServiceProvider(service = AuthenticationProcessService.class)
+public class AuthenticationProcessServiceDefault extends AuthenticationProcessService {
 
-    public ProcessoAutenticacaoServicePadrao() {
+    public AuthenticationProcessServiceDefault() {
         super();
     }
     private static final int MAXIMO_TENTATIVAS = 3;
 
     @Override
-    public AuthenticatedUser executarAutenticacao() throws ProcessoAutenticacaoException {
+    public AuthenticatedUser executeAuthenticationQuery() throws AuthenticationProcessException {
 
         if (!SecurityService.Lookup.getDefault().isServiceAvailable()) {
-            throw new ProcessoAutenticacaoException.ServicoIndisponivel();
+            throw new AuthenticationProcessException.Unavailable();
         }
 
         /* Definição do diálogo de login, seguindo a API do Netbeans RCP. */
-        final String loginAnterior = NbPreferences.forModule(ProcessoAutenticacaoServicePadrao.class).get("login", "");
-        final CredenciaisPanel credenciaisPanel = new CredenciaisPanel(loginAnterior);
+        final String loginAnterior = NbPreferences.forModule(AuthenticationProcessServiceDefault.class).get("login", "");
+        final CredentialPanel credenciaisPanel = new CredentialPanel(loginAnterior);
         final DialogDescriptor dialogDescriptor = new DialogDescriptor(credenciaisPanel, "Login");
         dialogDescriptor.setClosingOptions(null);
         dialogDescriptor.setModal(true);
@@ -55,7 +55,7 @@ public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoServi
 
             if (result == DialogDescriptor.CANCEL_OPTION || result == DialogDescriptor.CLOSED_OPTION) {
                 /* O usuário cancelou o login ou fechou o diálogo de login. */
-                throw new ProcessoAutenticacaoException.ProcessoCancelado();
+                throw new AuthenticationProcessException.Cancelled();
             } else if (result == DialogDescriptor.OK_OPTION) {
                 /* O usuário confirmou o login. Valida os campos. */
                 final String login = credenciaisPanel.getLogin().trim();
@@ -73,7 +73,7 @@ public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoServi
                     public void run() {
                         try {
                             SecurityService.Lookup.getDefault().login(login, senha);
-                            NbPreferences.forModule(ProcessoAutenticacaoServicePadrao.class).put("login", login);
+                            NbPreferences.forModule(AuthenticationProcessServiceDefault.class).put("login", login);
                         } catch (AuthenticationException ex) {
                             // ignora
                         }
@@ -94,17 +94,17 @@ public class ProcessoAutenticacaoServicePadrao extends ProcessoAutenticacaoServi
                     contadorTentativas++;
                     notificationLine.setErrorMessage("Estas credenciais não esão ativas.");
                 } else if (ex instanceof AuthenticationException.UnavailableService) {
-                    throw new ProcessoAutenticacaoException.ServicoIndisponivel();
+                    throw new AuthenticationProcessException.Unavailable();
                 } else {
-                    throw new ProcessoAutenticacaoException.ServicoIndisponivel();
+                    throw new AuthenticationProcessException.Unavailable();
                 }
             }
         }
-        throw new ProcessoAutenticacaoException.ExcessoTentativas();
+        throw new AuthenticationProcessException.Exceeded();
     }
 
     @Override
-    public void executarLogoff() {
+    public void executeLogoff() {
         ProgressUtils.showProgressDialogAndRun(new Runnable() {
 
             @Override

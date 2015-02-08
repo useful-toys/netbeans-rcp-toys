@@ -19,11 +19,11 @@ import org.openide.util.lookup.ServiceProviders;
     @ServiceProvider(service = StatusLineElementProvider.class, position = 1),
     @ServiceProvider(service = AuthenticationListener.class)
 })
-public class UsuarioAutenticadoStatusLineElementProvider implements StatusLineElementProvider, AuthenticationListener {
+public class AuthenticatedUserStatusLineElementProvider implements StatusLineElementProvider, AuthenticationListener {
 
     private JLabel usuarioLabel;
 
-    public UsuarioAutenticadoStatusLineElementProvider() {
+    public AuthenticatedUserStatusLineElementProvider() {
         super();
     }
 

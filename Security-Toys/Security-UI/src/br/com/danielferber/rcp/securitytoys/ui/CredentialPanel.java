@@ -4,16 +4,16 @@ package br.com.danielferber.rcp.securitytoys.ui;
  *
  * @author X7WS
  */
-public class CredenciaisPanel extends javax.swing.JPanel {
+public class CredentialPanel extends javax.swing.JPanel {
 
-    public static final String PROP_PREFIXO = CredenciaisPanel.class.getName()+".";
+    public static final String PROP_PREFIXO = CredentialPanel.class.getName()+".";
     public static final String PROP_SENHA = PROP_PREFIXO + "senha";
     public static final String PROP_CHAVE = PROP_PREFIXO + "chave";
     
     /**
      * Creates new form CredenciaisPanel
      */
-    public CredenciaisPanel(String login) {
+    public CredentialPanel(String login) {
         initComponents();
         campoLogin.setText(login);
     }
@@ -51,9 +51,9 @@ public class CredenciaisPanel extends javax.swing.JPanel {
         jLabel2 = new javax.swing.JLabel();
         campoSenha = new javax.swing.JPasswordField();
 
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(CredenciaisPanel.class, "CredenciaisPanel.jLabel1.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(CredentialPanel.class, "CredentialPanel.jLabel1.text")); // NOI18N
 
-        campoLogin.setText(org.openide.util.NbBundle.getMessage(CredenciaisPanel.class, "CredenciaisPanel.campoLogin.text")); // NOI18N
+        campoLogin.setText(org.openide.util.NbBundle.getMessage(CredentialPanel.class, "CredentialPanel.campoLogin.text")); // NOI18N
         campoLogin.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 campoLoginActionPerformed(evt);
@@ -65,9 +65,9 @@ public class CredenciaisPanel extends javax.swing.JPanel {
             }
         });
 
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel2, org.openide.util.NbBundle.getMessage(CredenciaisPanel.class, "CredenciaisPanel.jLabel2.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel2, org.openide.util.NbBundle.getMessage(CredentialPanel.class, "CredentialPanel.jLabel2.text")); // NOI18N
 
-        campoSenha.setText(org.openide.util.NbBundle.getMessage(CredenciaisPanel.class, "CredenciaisPanel.campoSenha.text")); // NOI18N
+        campoSenha.setText(org.openide.util.NbBundle.getMessage(CredentialPanel.class, "CredentialPanel.campoSenha.text")); // NOI18N
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
