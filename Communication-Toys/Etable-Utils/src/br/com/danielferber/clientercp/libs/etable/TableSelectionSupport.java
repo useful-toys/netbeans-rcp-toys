@@ -52,11 +52,11 @@ public class TableSelectionSupport<RowType extends Object> {
     }
 
     private Map<String, RowType> calculateSelection() {
-        final ColumnDrivenTableModel<RowType> tableModel = (ColumnDrivenTableModel<RowType>) table.getModel();
         final int[] rowIndex = table.getSelectedRows();
         if (rowIndex.length == 0) {
             return null;
         }
+        final ColumnDrivenTableModel<RowType> tableModel = (ColumnDrivenTableModel<RowType>) table.getModel();
         Map<String, RowType> selection = new HashMap<>();
         for (int indice : rowIndex) {
             indice = table.convertRowIndexToModel(indice);
