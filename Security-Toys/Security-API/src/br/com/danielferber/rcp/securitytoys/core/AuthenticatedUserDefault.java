@@ -47,7 +47,7 @@ public class AuthenticatedUserDefault implements AuthenticatedUser {
     }
 
     protected AuthorizationException checkPermission(Collection<String> resources) {
-        if (! Collections.disjoint(perfis, resources)) {
+        if (Collections.disjoint(perfis, resources)) {
             return new AuthorizationException.NotAuthorized(this, resources.iterator().next());
         }
         return null;
