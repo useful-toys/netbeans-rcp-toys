@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package br.com.danielferber.clientercp.libs.etable;
+package br.com.danielferber.rcp.communicationtoys.etable;
 
 
 public class CellModelPadrao<RowType, ColumnType> implements CellModel<RowType, ColumnType> {

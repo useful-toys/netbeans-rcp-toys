@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package br.com.danielferber.clientercp.libs.etable;
+package br.com.danielferber.rcp.communicationtoys.etable;
 
 import java.awt.Component;
 import java.util.List;

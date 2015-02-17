@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package br.com.danielferber.clientercp.libs.etable;
+package br.com.danielferber.rcp.communicationtoys.etable;
 
 import br.com.danielferber.rcp.communicationtoys.cookies.api.CookieService;
 import java.util.HashMap;
