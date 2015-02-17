@@ -3,7 +3,7 @@
     <type>org.netbeans.modules.apisupport.project</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
-            <code-name-base>br.com.danielferber.clientercp.libs.etable</code-name-base>
+            <code-name-base>br.com.danielferber.rcp.communicationtoys.etable</code-name-base>
             <suite-component/>
             <module-dependencies>
                 <dependency>
@@ -48,7 +48,7 @@
                 </dependency>
             </module-dependencies>
             <public-packages>
-                <package>br.com.danielferber.clientercp.libs.etable</package>
+                <package>br.com.danielferber.rcp.communicationtoys.etable</package>
             </public-packages>
         </data>
     </configuration>

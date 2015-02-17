@@ -116,14 +116,33 @@ public class CookieServiceImpl implements CookieService {
     }
 
     @Override
+    public void setFocusCookies(Collection<Object> cookies) {
+        focusContent2.set(cookies, null);
+    }
+
+    @Override
     public void setFocusCookies(Object... cookies) {
         focusContent2.set(Arrays.asList(cookies), null);
     }
 
     @Override
+    public void addFocusCookies(Collection<Object> cookies) {
+        for (Object cookie : cookies) {
+            focusContent2.add(cookie);
+        }
+    }
+    
+    @Override
     public void addFocusCookies(Object... cookies) {
         for (Object cookie : cookies) {
             focusContent2.add(cookie);
+        }
+    }
+
+    @Override
+    public void removeFocusCookies(Collection<Object> cookies) {
+        for (Object cookie : cookies) {
+            focusContent2.remove(cookie);
         }
     }
 
@@ -168,6 +187,11 @@ public class CookieServiceImpl implements CookieService {
     }
 
     @Override
+    public void setSelectionCookies(Collection<Object> cookies) {
+        selectionContent2.set(cookies, null);
+    }
+
+    @Override
     public void setSelectionCookies(Object... cookies) {
         selectionContent2.set(Arrays.asList(cookies), null);
     }
@@ -180,7 +204,20 @@ public class CookieServiceImpl implements CookieService {
     }
 
     @Override
+    public void addSelectionCookies(Collection<Object> cookies) {
+        for (Object cookie : cookies) {
+            selectionContent2.add(cookie);
+        }
+    }
+
+    @Override
     public void removeSelectionCookies(Object... cookies) {
+        for (Object cookie : cookies) {
+            selectionContent2.remove(cookie);
+        }
+    }
+    @Override
+    public void removeSelectionCookies(Collection<Object> cookies) {
         for (Object cookie : cookies) {
             selectionContent2.remove(cookie);
         }

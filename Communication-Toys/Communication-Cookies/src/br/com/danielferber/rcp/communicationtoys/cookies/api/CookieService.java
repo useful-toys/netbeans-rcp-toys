@@ -5,6 +5,7 @@
  */
 package br.com.danielferber.rcp.communicationtoys.cookies.api;
 
+import java.util.Collection;
 import java.util.Map;
 import org.openide.util.lookup.InstanceContent;
 
@@ -19,14 +20,20 @@ public interface CookieService {
     void updateStatic();
 
     void setFocusObjects(Map<String, ? extends Object> focus);
+    void setFocusCookies(Collection<Object> cookies);
     void setFocusCookies(Object ...cookies);
+    void addFocusCookies(Collection<Object> cookies);
     void addFocusCookies(Object ...cookies);
+    void removeFocusCookies(Collection<Object> cookies);
     void removeFocusCookies(Object ...cookies);
     void clearFocus();
 
     void setSelectionObjects(Map<String, ? extends Object> selection);
+    void setSelectionCookies(Collection<Object> cookies);
     void setSelectionCookies(Object ...cookies);
+    void addSelectionCookies(Collection<Object> cookies);
     void addSelectionCookies(Object ...cookies);
+    void removeSelectionCookies(Collection<Object> cookies);
     void removeSelectionCookies(Object ...cookies);
     void clearSelection();
 

@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-OpenIDE-Module: br.com.danielferber.clientercp.libs.etable
+OpenIDE-Module: br.com.danielferber.rcp.communicationtoys.etable
 OpenIDE-Module-Localizing-Bundle: br/com/danielferber/rcp/communicationtoys/etable/Bundle.properties
 OpenIDE-Module-Specification-Version: 1.0
 
