@@ -4,35 +4,57 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
+ * Describes an user.
  *
  * @author Daniel
  */
 public interface AuthenticatedUser {
 
+    /**
+     * @return String used as user identifier when logging in.
+     */
     String getLogin();
 
+    /**
+     * @return Actual user name.
+     */
     String getName();
 
-    Set<String> getPerfis();
+    /**
+     * @return A set of resources names the user is granted to use.
+     */
+    Set<String> getResources();
 
     /**
-     * Verifica se o usuário está autorizado a acessar o recurso indicado. Use este método para decidir se o item de
-     * interface associado ao recurso está visível ou habilitado.
+     * Check if the user is granted to use given resource.
      *
-     * @param resouceName Nome do recurso para verificar.
-     * @return <code>true</code> se o usuário está autorizado a acessar o recurso. <code>false</code> caso contrário.
+     * @param resouceName Resource name to query.
+     * @return <code>true</code> if granted; <code>false</code> otherwise.
      */
-    boolean isResourceGranted(final String resource);
-
-    boolean isAnyResourceGranted(final Collection<String> resources);
-    boolean isAnyResourceGranted(final String... resources);
+    boolean isResourceGranted(final String resouceName);
 
     /**
-     * Lança uma exceção se o usuário não está autorizado a acessar o recurso indicado.
+     * Check if the user is granted to use at leat one of given resources.
      *
-     * @param nomeRecurso Nome do recurso para verificar.
-     * @throws AutorizacaoException se o usuário não está autorizado a acessar o recurso.
+     * @param resourceNames A collection of resource names to query.
+     * @return <code>true</code> if granted; <code>false</code> otherwise.
      */
-    void resourceGranted(final String nomeRecurso) throws AuthorizationException;
+    boolean isAnyResourceGranted(final Collection<String> resourceNames);
+
+    /**
+     * Check if the user is granted to use at leat one of given resources.
+     *
+     * @param resourceNames A list of resource names to query.
+     * @return <code>true</code> if granted; <code>false</code> otherwise.
+     */
+    boolean isAnyResourceGranted(final String... resourceNames);
+
+    /**
+     * Raise an exception if user is not granted to use a given resource.
+     *
+     * @param resouceName Resource name to query.
+     * @throws AuthorizationException if not granted.
+     */
+    void resourceGranted(final String resouceName) throws AuthorizationException;
 
 }

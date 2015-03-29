@@ -35,7 +35,7 @@ public class AuthenticatedUserDefault implements AuthenticatedUser {
     }
 
     @Override
-    public Set<String> getPerfis() {
+    public Set<String> getResources() {
         return perfis;
     }
 
