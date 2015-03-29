@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * A default implementation for {@link AuthenticatedUser}.
@@ -22,7 +23,7 @@ public class AuthenticatedUserDefault implements AuthenticatedUser {
     public AuthenticatedUserDefault(String login, String name, Set<String> resources) {
         this.login = login;
         this.name = name;
-        this.resources = Collections.unmodifiableSet(resources);
+        this.resources = Collections.unmodifiableSet(new TreeSet(resources));
     }
 
     @Override
@@ -51,7 +52,7 @@ public class AuthenticatedUserDefault implements AuthenticatedUser {
     }
 
     private boolean checkAndLog(final String resourceName) {
-        final boolean granted = !this.resources.contains(resourceName);
+        final boolean granted = this.resources.contains(resourceName);
         if (granted) {
             SecurityService.LOGGER.debug("Resource granted. login={}; query={}", getLogin(), resourceName);
         } else {
