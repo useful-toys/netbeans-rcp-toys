@@ -29,7 +29,7 @@ public interface AuthenticatedUser {
      * Check if the user is granted to use given resource.
      *
      * @param resouceName Resource name to query.
-     * @return <code>true</code> if granted; <code>false</code> otherwise.
+     * @return true if granted; false otherwise.
      */
     boolean isResourceGranted(final String resouceName);
 
@@ -37,7 +37,7 @@ public interface AuthenticatedUser {
      * Check if the user is granted to use at leat one of given resources.
      *
      * @param resourceNames A collection of resource names to query.
-     * @return <code>true</code> if granted; <code>false</code> otherwise.
+     * @return true if granted; false otherwise.
      */
     boolean isAnyResourceGranted(final Collection<String> resourceNames);
 
@@ -45,7 +45,7 @@ public interface AuthenticatedUser {
      * Check if the user is granted to use at leat one of given resources.
      *
      * @param resourceNames A list of resource names to query.
-     * @return <code>true</code> if granted; <code>false</code> otherwise.
+     * @return true if granted; false otherwise.
      */
     boolean isAnyResourceGranted(final String... resourceNames);
 

@@ -18,7 +18,7 @@ public class AuthenticationException extends Exception {
     }
 
     /**
-     * @return String used as user identifier when logging in. <code>null</code> if not applicable.
+     * @return String used as user identifier when logging in. null if not applicable.
      */
     public String getLogin() {
         return login;
@@ -70,7 +70,7 @@ public class AuthenticationException extends Exception {
     }
 
     /**
-     * Authentication service is not available.
+     * Underlying service implementation is not available.
      */
     public static class UnavailableService extends AuthenticationException {
 
