@@ -9,19 +9,20 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
+ * A default implementation for {@link AuthenticatedUser}.
  *
- * @author Daniel
+ * @author Daniel Felix Ferber
  */
 public class AuthenticatedUserDefault implements AuthenticatedUser {
 
     private final String login;
-    private final String nome;
-    private final Set<String> perfis;
+    private final String name;
+    private final Set<String> resources;
 
-    public AuthenticatedUserDefault(String login, String nome, Set<String> perfis) {
+    public AuthenticatedUserDefault(String login, String name, Set<String> resources) {
         this.login = login;
-        this.nome = nome;
-        this.perfis = Collections.unmodifiableSet(perfis);
+        this.name = name;
+        this.resources = Collections.unmodifiableSet(resources);
     }
 
     @Override
@@ -31,76 +32,59 @@ public class AuthenticatedUserDefault implements AuthenticatedUser {
 
     @Override
     public String getName() {
-        return nome;
+        return name;
     }
 
     @Override
     public Set<String> getResources() {
-        return perfis;
+        return resources;
     }
 
-    protected AuthorizationException checkPermission(String resource) {
-        if (!this.perfis.contains(resource)) {
-            return new AuthorizationException.NotAuthorized(this, resource);
+    protected boolean checkAndLogAny(Collection<String> resourceNames) {
+        final boolean granted = !Collections.disjoint(resources, resourceNames);
+        if (granted) {
+            SecurityService.LOGGER.debug("Resource granted. login={}; query={}", getLogin(), resourceNames);
+        } else {
+            SecurityService.LOGGER.debug("Resource denied. login={}; query={}", getLogin(), resourceNames);
         }
-        return null;
+        return granted;
     }
 
-    protected AuthorizationException checkPermission(Collection<String> resources) {
-        if (Collections.disjoint(perfis, resources)) {
-            return new AuthorizationException.NotAuthorized(this, resources.iterator().next());
+    private boolean checkAndLog(final String resourceName) {
+        final boolean granted = !this.resources.contains(resourceName);
+        if (granted) {
+            SecurityService.LOGGER.debug("Resource granted. login={}; query={}", getLogin(), resourceName);
+        } else {
+            SecurityService.LOGGER.debug("Resource denied. login={}; query={}", getLogin(), resourceName);
         }
-        return null;
+        return granted;
     }
 
     @Override
-    public final boolean isResourceGranted(final String resource) {
-        final AuthorizationException motivo = AuthenticatedUserDefault.this.checkPermission(resource);
-        if (motivo == null) {
-            SecurityService.LOGGER.debug("Permissão concedida. login={}; recurso={}", getLogin(), resource);
-        } else {
-            SecurityService.LOGGER.debug("Permissão recusada. login={}; recurso={}; motivo={}", getLogin(), resource, motivo);
-        }
-        return motivo == null;
+    public final boolean isResourceGranted(final String resourceName) {
+        return AuthenticatedUserDefault.this.checkAndLog(resourceName);
     }
 
     @Override
-    public final boolean isAnyResourceGranted(Collection<String> resources) {
-        final AuthorizationException motivo = checkPermission(resources);
-        if (motivo == null) {
-            SecurityService.LOGGER.debug("Permissão concedida. login={}; recurso={}", getLogin(), resources);
-        } else {
-            SecurityService.LOGGER.debug("Permissão recusada. login={}; recurso={}; motivo={}", getLogin(), resources, motivo);
+    public final void resourceGranted(final String resourceName) throws AuthorizationException {
+        if (!AuthenticatedUserDefault.this.checkAndLog(resourceName)) {
+            throw new AuthorizationException.NotAuthorized(this, resourceName);
         }
-        return motivo == null;
     }
 
     @Override
-    public boolean isAnyResourceGranted(String... resources) {
-        final AuthorizationException motivo = checkPermission(Arrays.asList(resources));
-        if (motivo == null) {
-            SecurityService.LOGGER.debug("Permissão concedida. login={}; recurso={}", getLogin(), resources);
-        } else {
-            SecurityService.LOGGER.debug("Permissão recusada. login={}; recurso={}; motivo={}", getLogin(), resources, motivo);
-        }
-        return motivo == null;
+    public final boolean isAnyResourceGranted(Collection<String> resourceNames) {
+        return checkAndLogAny(resourceNames);
     }
 
     @Override
-    public final void resourceGranted(final String recurso) throws AuthorizationException {
-        final AuthorizationException motivo = AuthenticatedUserDefault.this.checkPermission(recurso);
-        if (motivo == null) {
-            SecurityService.LOGGER.debug("Permissão concedida. login={}; recurso={}", getLogin(), recurso);
-        } else {
-            SecurityService.LOGGER.debug("Permissão recusada. login={}; recurso={}; motivo={}", getLogin(), recurso, motivo);
-        }
-        if (motivo != null) {
-            throw motivo;
-        }
+    public boolean isAnyResourceGranted(String... resourceNames) {
+        return checkAndLogAny(Arrays.asList(resourceNames));
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{login=" + this.getLogin() + '}';
+        return "AuthenticatedUserDefault{" + "login=" + login + ", resources=" + resources + '}';
     }
+
 }

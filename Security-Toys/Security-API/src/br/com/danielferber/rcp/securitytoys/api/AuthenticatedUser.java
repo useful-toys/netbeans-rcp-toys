@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * Describes an user.
+ * Describes an user and resources granted for use.
  *
- * @author Daniel
+ * @author Daniel Felix Ferber
  */
 public interface AuthenticatedUser {
 
