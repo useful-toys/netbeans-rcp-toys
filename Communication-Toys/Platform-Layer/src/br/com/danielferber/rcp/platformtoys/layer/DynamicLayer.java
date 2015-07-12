@@ -7,6 +7,8 @@ package br.com.danielferber.rcp.platformtoys.layer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import org.openide.filesystems.FileSystem;
@@ -27,8 +29,12 @@ public class DynamicLayer extends MultiFileSystem {
     public static URL validateUrl(final String layerUrlString) throws IllegalStateException {
         final URL url;
         try {
-            url = new URL(layerUrlString);
+            URL url2 = new URL(layerUrlString);
+            URI uri = new URI(url2.getProtocol(), url2.getUserInfo(), url2.getHost(), url2.getPort(), url2.getPath(), url2.getQuery(), url2.getRef());
+            url = uri.toURL();
         } catch (MalformedURLException ex) {
+            throw new IllegalArgumentException("Invalid URL.", ex);
+        } catch (URISyntaxException ex) {
             throw new IllegalArgumentException("Invalid URL.", ex);
         }
         try {
