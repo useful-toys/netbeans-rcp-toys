@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-AutoUpdate-Show-In-Client: true
-OpenIDE-Module: br.com.danielferber.rcp.communicationtoys.cookies
-OpenIDE-Module-Localizing-Bundle: br/com/danielferber/rcp/communicationtoys/cookies/Bundle.properties
-OpenIDE-Module-Specification-Version: 1.0
-

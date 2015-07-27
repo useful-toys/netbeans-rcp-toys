@@ -1,7 +1,0 @@
-Manifest-Version: 1.0
-AutoUpdate-Show-In-Client: true
-OpenIDE-Module: br.com.danielferber.cosmetopeia.clientercp.debug
-OpenIDE-Module-Localizing-Bundle: br/com/danielferber/rcp/communicationtoys/debug/Bundle.properties
-OpenIDE-Module-Requires: org.openide.windows.WindowManager
-OpenIDE-Module-Specification-Version: 1.0
-

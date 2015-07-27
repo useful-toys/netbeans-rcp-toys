@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-OpenIDE-Module: br.com.danielferber.rcp.loggertoys.configuration
-OpenIDE-Module-Localizing-Bundle: br/com/danielferber/rcp/loggertoys/configuration/Bundle.properties
+OpenIDE-Module: org.usefultoys.rcp.logger.configuration
+OpenIDE-Module-Localizing-Bundle: org/usefultoys/rcp/logger/configuration/Bundle.properties
 OpenIDE-Module-Specification-Version: 1.0
 
