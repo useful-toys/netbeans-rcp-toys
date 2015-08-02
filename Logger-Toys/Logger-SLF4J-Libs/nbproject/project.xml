@@ -7,25 +7,15 @@
             <suite-component/>
             <module-dependencies/>
             <public-packages>
-                <package>org.apache.commons.logging</package>
-                <package>org.apache.log4j</package>
                 <package>org.slf4j</package>
             </public-packages>
             <class-path-extension>
-                <runtime-relative-path>ext/jcl-over-slf4j-1.7.7.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jcl-over-slf4j-1.7.7.jar</binary-origin>
+                <runtime-relative-path>ext/slf4j-jdk14-1.7.7.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/slf4j-jdk14-1.7.7.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/slf4j-api-1.7.7.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/slf4j-api-1.7.7.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/log4j-over-slf4j-1.7.7.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/log4j-over-slf4j-1.7.7.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/slf4j-jdk14-1.7.7.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/slf4j-jdk14-1.7.7.jar</binary-origin>
             </class-path-extension>
         </data>
     </configuration>
