@@ -87,6 +87,7 @@ public class ColumnDrivenTableModel<RowType> extends AbstractTableModel {
             this.fireTableRowsInserted(rowIds.size(), rowIds.size());
         } else {
             int index = this.rowIds.indexOf(id);
+            this.rowObjects.set(index, rowObject);
             this.fireTableRowsUpdated(index, index);
         }
     }
