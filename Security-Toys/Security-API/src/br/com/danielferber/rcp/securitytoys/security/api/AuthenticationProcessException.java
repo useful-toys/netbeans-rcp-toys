@@ -1,4 +1,4 @@
-package br.com.danielferber.rcp.securitytoys.authentication.api;
+package br.com.danielferber.rcp.securitytoys.security.api;
 
 import org.openide.util.NbBundle;
 

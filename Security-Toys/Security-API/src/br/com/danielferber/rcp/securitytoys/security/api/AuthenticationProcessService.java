@@ -1,6 +1,5 @@
-package br.com.danielferber.rcp.securitytoys.authentication.api;
+package br.com.danielferber.rcp.securitytoys.security.api;
 
-import br.com.danielferber.rcp.securitytoys.security.api.AuthenticatedUser;
 import org.openide.util.Lookup;
 
 public interface AuthenticationProcessService {

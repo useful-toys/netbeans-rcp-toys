@@ -1,5 +1,6 @@
 package br.com.danielferber.rcp.securitytoys.security.api;
 
+import br.com.danielferber.rcp.securitytoys.security.api.PasswordService;
 import br.com.danielferber.rcp.securitytoys.security.spi.AuthenticationListener;
 import br.com.danielferber.rcp.securitytoys.security.api.AuthenticationException.InactiveUser;
 import br.com.danielferber.rcp.securitytoys.security.api.AuthenticationException.IncorrectCredentials;

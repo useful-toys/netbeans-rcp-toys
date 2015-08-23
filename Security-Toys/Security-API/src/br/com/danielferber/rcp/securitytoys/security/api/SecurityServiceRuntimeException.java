@@ -1,7 +1,7 @@
 package br.com.danielferber.rcp.securitytoys.security.api;
 
 /**
- * Security service failured.
+ * Security service failure.
  */
 public class SecurityServiceRuntimeException extends RuntimeException {
 

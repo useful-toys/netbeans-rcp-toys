@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package br.com.danielferber.rcp.securitytoys.security.security.impl;
+package br.com.danielferber.rcp.securitytoys.security.impl;
 
 import br.com.danielferber.rcp.securitytoys.security.api.SecurityService;
 import br.com.danielferber.rcp.securitytoys.security.core.SecurityServiceDefault;
