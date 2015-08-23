@@ -1,4 +1,4 @@
-package br.com.danielferber.rcp.securitytoys.authentication.ui;
+package br.com.danielferber.rcp.securitytoys.security.ui;
 
 /**
  *

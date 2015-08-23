@@ -1,9 +1,11 @@
-package br.com.danielferber.rcp.securitytoys.authentication.ui;
+package br.com.danielferber.rcp.securitytoys.security.ext;
 
 /**
  *
  * @author Daniel
  */
+import br.com.danielferber.rcp.securitytoys.authentication.ui.Bundle;
+import br.com.danielferber.rcp.securitytoys.authentication.ui.CredentialPanel;
 import br.com.danielferber.rcp.securitytoys.security.api.AuthenticatedUser;
 import br.com.danielferber.rcp.securitytoys.security.api.AuthenticationException;
 import br.com.danielferber.rcp.securitytoys.security.api.SecurityService;

@@ -118,7 +118,7 @@ public class SecurityServiceDefault implements SecurityService {
     protected void notificarUsuarioAutenticado(final AuthenticatedUser usuario) {
         for (final AuthenticationListener listener : lookupSegurancaListeners()) {
             try {
-                listener.notificarAutenticacao(usuario);
+                listener.notifyAuthenticatedUser(usuario);
                 LOGGER.info("Sucesso em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", usuario, listener);
             } catch (final RuntimeException e) {
                 LOGGER.error("Falha em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", usuario, listener);
@@ -126,7 +126,7 @@ public class SecurityServiceDefault implements SecurityService {
         }
         for (final AuthenticationListener listener : listeners) {
             try {
-                listener.notificarAutenticacao(usuario);
+                listener.notifyAuthenticatedUser(usuario);
                 LOGGER.info("Sucesso em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", usuario, listener);
             } catch (final RuntimeException e) {
                 LOGGER.error("Falha em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", usuario, listener);
