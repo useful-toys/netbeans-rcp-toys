@@ -1,24 +1,32 @@
 package br.com.danielferber.rcp.securitytoys.security.api;
 
+import org.openide.util.NbBundle;
+
 /**
  * The authentication credential were refused.
  */
+@NbBundle.Messages({
+    "AuthenticationException_IncorrectCredentials=Incorrect credentials.",
+    "AuthenticationException_InactiveUser=User is not active.",
+    "AuthenticationException_InexistingUser=User does not exist.",
+    "AuthenticationException_UnavailableService=Authentication service unavailable.",})
 public class AuthenticationException extends Exception {
 
     private final String login;
 
-    public AuthenticationException(final String message, final String login) {
+    protected AuthenticationException(final String message, final String login) {
         super(message);
         this.login = login;
     }
 
-    public AuthenticationException(final String message, final Exception e) {
+    protected AuthenticationException(final String message, final Exception e) {
         super(message, e);
         this.login = null;
     }
 
     /**
-     * @return String used as user identifier when logging in. null if not applicable.
+     * @return String used as user identifier when logging in. null if not
+     * applicable.
      */
     public String getLogin() {
         return login;
@@ -35,7 +43,7 @@ public class AuthenticationException extends Exception {
          * @param login String used as user identifier when trying to log in.
          */
         public IncorrectCredentials(String login) {
-            super("Incorrect credentials", login);
+            super(Bundle.AuthenticationException_IncorrectCredentials(), login);
         }
     }
 
@@ -50,7 +58,7 @@ public class AuthenticationException extends Exception {
          * @param login String used as user identifier when trying to log in.
          */
         public InactiveUser(String login) {
-            super("User is not active.", login);
+            super(Bundle.AuthenticationException_InactiveUser(), login);
         }
     }
 
@@ -65,7 +73,7 @@ public class AuthenticationException extends Exception {
          * @param login String used as user identifier when trying to log in.
          */
         public InexistingUser(String login) {
-            super("User does not exist.", login);
+            super(Bundle.AuthenticationException_InexistingUser(), login);
         }
     }
 
@@ -80,7 +88,7 @@ public class AuthenticationException extends Exception {
          * @param e exception that describes unavailability.
          */
         public UnavailableService(Exception e) {
-            super("Authentication service unavailable.", e);
+            super(Bundle.AuthenticationException_UnavailableService(), e);
         }
     }
 }

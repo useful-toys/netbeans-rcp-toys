@@ -1,15 +1,21 @@
 package br.com.danielferber.rcp.securitytoys.security.api;
 
+import org.openide.util.NbBundle;
+
 /**
  * Descreve a recusa de acessar a um recurso ou uma funcionalidade.
  */
+@NbBundle.Messages({
+    "AuthorizationException_NotAuthenticated=User not authenticated.",
+    "AuthorizationException_NotAuthorized=User not authorized."
+})
 public class AuthorizationException extends Exception {
 
     private final String resourceName;
     private final AuthenticatedUser authenticatedUser;
 
-    public AuthorizationException(final AuthenticatedUser authenticatedUser, final String resourceName) {
-        super("Authorization refused.");
+    protected AuthorizationException(final String message, final AuthenticatedUser authenticatedUser, final String resourceName) {
+        super(message);
         this.resourceName = resourceName;
         this.authenticatedUser = authenticatedUser;
     }
@@ -34,7 +40,7 @@ public class AuthorizationException extends Exception {
     public static class NotAuthenticated extends AuthorizationException {
 
         public NotAuthenticated(AuthenticatedUser authenticatedUser, String resourceName) {
-            super(authenticatedUser, resourceName);
+            super(Bundle.AuthorizationException_NotAuthenticated(), authenticatedUser, resourceName);
         }
     }
 
@@ -44,7 +50,7 @@ public class AuthorizationException extends Exception {
     public static class NotAuthorized extends AuthorizationException {
 
         public NotAuthorized(AuthenticatedUser authenticatedUser, String resourceName) {
-            super(authenticatedUser, resourceName);
+            super(Bundle.AuthorizationException_NotAuthorized(), authenticatedUser, resourceName);
         }
     }
 }

@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * Describes an user and resources granted for use.
+ * Describes an user and granted resources.
  *
  * @author Daniel Felix Ferber
  */
