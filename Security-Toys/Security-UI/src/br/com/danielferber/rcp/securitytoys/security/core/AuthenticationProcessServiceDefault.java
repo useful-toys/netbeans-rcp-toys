@@ -1,16 +1,15 @@
-package br.com.danielferber.rcp.securitytoys.security.ext;
+package br.com.danielferber.rcp.securitytoys.security.core;
 
 /**
  *
  * @author Daniel
  */
-import br.com.danielferber.rcp.securitytoys.authentication.ui.Bundle;
-import br.com.danielferber.rcp.securitytoys.authentication.ui.CredentialPanel;
 import br.com.danielferber.rcp.securitytoys.security.api.AuthenticatedUser;
 import br.com.danielferber.rcp.securitytoys.security.api.AuthenticationException;
 import br.com.danielferber.rcp.securitytoys.security.api.SecurityService;
 import br.com.danielferber.rcp.securitytoys.security.api.AuthenticationProcessException;
 import br.com.danielferber.rcp.securitytoys.security.api.AuthenticationProcessService;
+import br.com.danielferber.rcp.securitytoys.security.ui.CredentialPanel;
 import org.netbeans.api.progress.ProgressUtils;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
@@ -22,7 +21,6 @@ import org.openide.util.lookup.ServiceProvider;
 @NbBundle.Messages({
     "AuthenticationProcessServiceDefault_LoginDialog_Title=Login"
 })
-@ServiceProvider(service = AuthenticationProcessService.class)
 public class AuthenticationProcessServiceDefault implements AuthenticationProcessService {
 
     public AuthenticationProcessServiceDefault() {
@@ -32,20 +30,21 @@ public class AuthenticationProcessServiceDefault implements AuthenticationProces
 
     @Override
     public AuthenticatedUser executeAuthenticationQuery() throws AuthenticationProcessException {
-
         if (!SecurityService.Lookup.getDefault().isServiceAvailable()) {
             throw new AuthenticationProcessException.Unavailable();
         }
-
-        /* Definição do diálogo de login, seguindo a API do Netbeans RCP. */
-        final String loginAnterior = NbPreferences.forModule(AuthenticationProcessServiceDefault.class).get("login", "");
-        final CredentialPanel credenciaisPanel = new CredentialPanel(loginAnterior);
-        final DialogDescriptor dialogDescriptor = new DialogDescriptor(credenciaisPanel, Bundle.AuthenticationProcessServiceDefault_LoginDialog_Title());
+        
+        final CredentialPanel.Descriptor descriptor = new CredentialPanel.Descriptor();
+        final CredentialPanel panel = new CredentialPanel(descriptor);
+        final DialogDescriptor dialogDescriptor = new DialogDescriptor(panel, Bundle.AuthenticationProcessServiceDefault_LoginDialog_Title());
         dialogDescriptor.setClosingOptions(null);
         dialogDescriptor.setModal(true);
         dialogDescriptor.setLeaf(true);
+        dialogDescriptor.setOptionType(DialogDescriptor.OK_CANCEL_OPTION);
         final NotificationLineSupport notificationLine = dialogDescriptor.createNotificationLineSupport();
-        notificationLine.setInformationMessage("Informe seu login e sua senha.");
+        panel.setNotificationLine(notificationLine);
+        final CredentialPanel.Inbound inbound = new CredentialPanel.Inbound();
+        panel.toField(inbound);
 
         /* Realiza até MAXIMO_TENTATIVAS tentativas. */
         int contadorTentativas = 1;
@@ -59,22 +58,15 @@ public class AuthenticationProcessServiceDefault implements AuthenticationProces
                 throw new AuthenticationProcessException.Canceled();
             } else if (result == DialogDescriptor.OK_OPTION) {
                 /* O usuário confirmou o login. Valida os campos. */
-                final String login = credenciaisPanel.getLogin().trim();
-                final char[] senha = credenciaisPanel.getSenha();
-                if (login.length() == 0 || senha.length == 0) {
-                    /* Informa sobre campos inválidos, mas não contabiliza a tentativa. */
-                    notificationLine.setErrorMessage("O login e a senha são obrigatórios.");
-                    continue;
-                }
-
+                CredentialPanel.Outbound outbound = new CredentialPanel.Outbound();
+                panel.fromField(outbound);
                 /* Recorre ao serviço de autenticação. */
                 ProgressUtils.showProgressDialogAndRun(new Runnable() {
 
                     @Override
                     public void run() {
                         try {
-                            SecurityService.Lookup.getDefault().login(login, senha);
-                            NbPreferences.forModule(AuthenticationProcessServiceDefault.class).put("login", login);
+                            SecurityService.Lookup.getDefault().login(outbound.login, outbound.password);
                         } catch (AuthenticationException ex) {
                             // ignora
                         }

@@ -43,11 +43,8 @@ public class AuthenticatedUserComponent extends JLabel {
 
     public void update() {
         final String userName = retrieveUserName();
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                AuthenticatedUserComponent.this.setText(userName);
-            }
+        SwingUtilities.invokeLater(() -> {
+            AuthenticatedUserComponent.this.setText(userName);
         });
     }
 

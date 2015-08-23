@@ -64,7 +64,9 @@
                     </run-dependency>
                 </dependency>
             </module-dependencies>
-            <public-packages/>
+            <public-packages>
+                <package>br.com.danielferber.rcp.securitytoys.security.core</package>
+            </public-packages>
         </data>
     </configuration>
 </project>

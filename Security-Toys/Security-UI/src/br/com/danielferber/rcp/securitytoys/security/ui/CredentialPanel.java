@@ -1,42 +1,113 @@
 package br.com.danielferber.rcp.securitytoys.security.ui;
 
+import br.com.danielferber.rcp.securitytoys.security.core.AuthenticationProcessServiceDefault;
+import org.openide.NotificationLineSupport;
+import org.openide.util.NbBundle;
+import org.openide.util.NbPreferences;
+
 /**
  *
  * @author X7WS
  */
+@NbBundle.Messages({
+    "CredentialPanel_Message_Default=Enter login and password.",
+    "CredentialPanel_Message_LoginRequired=Login must not be empty.",
+    "CredentialPanel_Message_PasswordRequired=Password must not be empty."
+})
 public class CredentialPanel extends javax.swing.JPanel {
 
-    public static final String PROP_PREFIXO = CredentialPanel.class.getName()+".";
-    public static final String PROP_SENHA = PROP_PREFIXO + "senha";
-    public static final String PROP_CHAVE = PROP_PREFIXO + "chave";
-    
+    private final Descriptor descriptor;
+    private NotificationLineSupport notificationLine;
+
+    /**
+     * Describes how to build the panel.
+     */
+    public static class Descriptor {
+
+        public String defaultMessage = Bundle.UserPasswordPanel_Message_Default();
+        public boolean suggestPrevisouLogin = true;
+    }
+
+    public static class Inbound {
+
+        public String login;
+    }
+
+    public static class Outbound {
+
+        public String login;
+        public char[] password;
+    }
+
     /**
      * Creates new form CredenciaisPanel
      */
-    public CredentialPanel(String login) {
+    public CredentialPanel(Descriptor descriptor) {
         initComponents();
-        loginField.setText(login);
+        this.descriptor = descriptor;
     }
-    
-    public String getLogin() {
-        return loginField.getText();
+
+    public void setNotificationLine(NotificationLineSupport notificationLine) {
+        this.notificationLine = notificationLine;
     }
-    
-    public char[] getSenha() {
-        return passwordField.getPassword();
+
+    public void fromField(Outbound outbound) throws IllegalStateException {
+        executePreValidation();
+        fillOutbound(outbound);
+        executePosValidation(outbound);
+        NbPreferences.forModule(CredentialPanel.class).put("login", outbound.login);
     }
-    
-    public void apagarSenha() {
-        passwordField.setText("");
-        firePropertyChange(PROP_SENHA, null, null);
+
+    protected void fillOutbound(Outbound outbound) {
+        outbound.login = this.loginField.getText().trim();
+        outbound.password = this.passwordField.getPassword();
     }
-    
-    public void setLogin(final String login) {
-        final String chaveAntiga = loginField.getText();
-        loginField.setText(login);
-        firePropertyChange(PROP_CHAVE, chaveAntiga, login);
+
+    public void toField(Inbound inbound) {
+        if (inbound.login == null) {
+            final String lastLogin = NbPreferences.forModule(CredentialPanel.class).get("login", "");
+            this.loginField.setText(lastLogin);
+        } else {
+            this.loginField.setText(inbound.login);
+        }
+        this.passwordField.setText("");
+        executeValidation();
     }
- 
+
+    protected String executePreValidation() throws IllegalStateException {
+        String message = null;
+        return message;
+    }
+
+    protected String executePosValidation(Outbound outbound) throws IllegalStateException {
+        String message = null;
+        if (outbound.login.length() == 0) {
+            throw new IllegalStateException();
+        }
+        if (outbound.password.length == 0) {
+            throw new IllegalStateException();
+        }
+        return message;
+    }
+
+    protected void executeValidation() {
+        try {
+            String message = executePreValidation();
+            Outbound outboundTmp = new Outbound();
+            executePosValidation(outboundTmp);
+
+            if (message != null) {
+                this.notificationLine.setWarningMessage(message);
+            } else {
+                this.notificationLine.setInformationMessage(descriptor.defaultMessage);
+            }
+        } catch (IllegalStateException e) {
+            if (this.notificationLine != null) {
+                this.notificationLine.setErrorMessage(e.getMessage());
+            }
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -68,6 +139,11 @@ public class CredentialPanel extends javax.swing.JPanel {
         org.openide.awt.Mnemonics.setLocalizedText(passwordLabel, org.openide.util.NbBundle.getMessage(CredentialPanel.class, "CredentialPanel.passwordLabel.text")); // NOI18N
 
         passwordField.setText(org.openide.util.NbBundle.getMessage(CredentialPanel.class, "CredentialPanel.passwordField.text")); // NOI18N
+        passwordField.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                passwordFieldPropertyChange(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -105,8 +181,16 @@ public class CredentialPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_loginFieldActionPerformed
 
     private void loginFieldPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_loginFieldPropertyChange
-        // TODO add your handling code here:
+        if ("text".equals(evt.getPropertyName())) {
+            executeValidation();
+        }
     }//GEN-LAST:event_loginFieldPropertyChange
+
+    private void passwordFieldPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_passwordFieldPropertyChange
+        if ("text".equals(evt.getPropertyName())) {
+            executeValidation();
+        }
+    }//GEN-LAST:event_passwordFieldPropertyChange
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField loginField;
