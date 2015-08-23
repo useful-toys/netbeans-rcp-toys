@@ -58,25 +58,14 @@ public class CredentialPanel extends javax.swing.JPanel {
         NbPreferences.forModule(CredentialPanel.class).put("login", outbound.login);
     }
 
-    protected void fillOutbound(Outbound outbound) {
+    protected String fillOutbound(Outbound outbound) throws IllegalStateException {
         outbound.login = this.loginField.getText().trim();
         outbound.password = this.passwordField.getPassword();
-    }
-
-    public void toField(Inbound inbound) {
-        if (inbound.login == null) {
-            final String lastLogin = NbPreferences.forModule(CredentialPanel.class).get("login", "");
-            this.loginField.setText(lastLogin);
-        } else {
-            this.loginField.setText(inbound.login);
-        }
-        this.passwordField.setText("");
-        executeValidation();
+        return null;
     }
 
     protected String executePreValidation() throws IllegalStateException {
-        String message = null;
-        return message;
+        return null;
     }
 
     protected String executePosValidation(Outbound outbound) throws IllegalStateException {
@@ -90,14 +79,30 @@ public class CredentialPanel extends javax.swing.JPanel {
         return message;
     }
 
+    public void toField(Inbound inbound) {
+        if (inbound.login == null) {
+            final String lastLogin = NbPreferences.forModule(CredentialPanel.class).get("login", "");
+            this.loginField.setText(lastLogin);
+        } else {
+            this.loginField.setText(inbound.login);
+        }
+        this.passwordField.setText("");
+        executeValidation();
+    }
+
     protected void executeValidation() {
         try {
-            String message = executePreValidation();
-            Outbound outboundTmp = new Outbound();
-            executePosValidation(outboundTmp);
+            final Outbound outbound = new Outbound();
+            String message1 = executePreValidation();
+            String message2 = fillOutbound(outbound);
+            String message3 = executePosValidation(outbound);
 
-            if (message != null) {
-                this.notificationLine.setWarningMessage(message);
+            if (message1 != null) {
+                this.notificationLine.setWarningMessage(message1);
+            } else if (message2 != null) {
+                this.notificationLine.setWarningMessage(message2);
+            } else if (message3 != null) {
+                this.notificationLine.setWarningMessage(message3);
             } else {
                 this.notificationLine.setInformationMessage(descriptor.defaultMessage);
             }
@@ -125,11 +130,6 @@ public class CredentialPanel extends javax.swing.JPanel {
         org.openide.awt.Mnemonics.setLocalizedText(loginLabel, org.openide.util.NbBundle.getMessage(CredentialPanel.class, "CredentialPanel.loginLabel.text")); // NOI18N
 
         loginField.setText(org.openide.util.NbBundle.getMessage(CredentialPanel.class, "CredentialPanel.loginField.text")); // NOI18N
-        loginField.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                loginFieldActionPerformed(evt);
-            }
-        });
         loginField.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
             public void propertyChange(java.beans.PropertyChangeEvent evt) {
                 loginFieldPropertyChange(evt);
@@ -176,9 +176,6 @@ public class CredentialPanel extends javax.swing.JPanel {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
-
-    private void loginFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginFieldActionPerformed
-    }//GEN-LAST:event_loginFieldActionPerformed
 
     private void loginFieldPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_loginFieldPropertyChange
         if ("text".equals(evt.getPropertyName())) {
