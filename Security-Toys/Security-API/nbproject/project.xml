@@ -33,9 +33,10 @@
                 </test-type>
             </test-dependencies>
             <public-packages>
-                <package>br.com.danielferber.rcp.securitytoys.api</package>
-                <package>br.com.danielferber.rcp.securitytoys.auth.api</package>
-                <package>br.com.danielferber.rcp.securitytoys.core</package>
+                <package>br.com.danielferber.rcp.securitytoys.authentication.api</package>
+                <package>br.com.danielferber.rcp.securitytoys.security.api</package>
+                <package>br.com.danielferber.rcp.securitytoys.security.core</package>
+                <package>br.com.danielferber.rcp.securitytoys.security.spi</package>
             </public-packages>
         </data>
     </configuration>
