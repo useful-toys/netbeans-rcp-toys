@@ -118,7 +118,7 @@ public abstract class DialogConventionImpl<Inbound, Outbound>
                 getDialogState().changeToDefaultState();
             }
         } catch (IllegalStateException e) {
-            getDialogState().changeToErrorState(e.getMessage());
+            getDialogState().changeToBlockingErrorState(e.getMessage());
         }
     }
 }

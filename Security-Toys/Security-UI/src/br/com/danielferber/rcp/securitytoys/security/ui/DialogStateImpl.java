@@ -48,8 +48,13 @@ public class DialogStateImpl extends PropertyChangeSupport implements DialogStat
     }
 
     @Override
-    public final void changeToErrorState(String message) {
+    public final void changeToBlockingErrorState(String message) {
         setMessage(new ErrorMessage(false, message));
+    }
+
+    @Override
+    public final void changeToErrorState(String message) {
+        setMessage(new ErrorMessage(true, message));
     }
 
     @Override

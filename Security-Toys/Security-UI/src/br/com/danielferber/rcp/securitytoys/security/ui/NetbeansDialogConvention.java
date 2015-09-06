@@ -101,7 +101,7 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
                     dialogConvention.fromFields(outbound);
                     dialogDescriptor.setClosingOptions(null);
                 } catch (IllegalStateException e) {
-                    dialogConvention.getDialogState().changeToErrorState(e.getMessage());
+                    dialogConvention.getDialogState().changeToBlockingErrorState(e.getMessage());
                     dialogDescriptor.setClosingOptions(new Object[]{});
                 }
             } else {
@@ -139,7 +139,7 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
                     dialogConvention.fromFields(outbound);
                     dialogDescriptor.setClosingOptions(null);
                 } catch (IllegalStateException e) {
-                    dialogConvention.getDialogState().changeToErrorState(e.getMessage());
+                    dialogConvention.getDialogState().changeToBlockingErrorState(e.getMessage());
                     dialogDescriptor.setClosingOptions(new Object[]{});
                     return;
                 }

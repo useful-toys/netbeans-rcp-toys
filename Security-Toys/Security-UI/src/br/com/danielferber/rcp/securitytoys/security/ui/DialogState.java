@@ -60,6 +60,8 @@ public interface DialogState {
 
     void changeToDefaultState();
 
+    void changeToBlockingErrorState(String message);
+
     void changeToErrorState(String message);
 
     void changeToInfoState(String message);

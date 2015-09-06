@@ -14,14 +14,25 @@ import br.com.danielferber.rcp.securitytoys.security.ui.NetbeansDialogConvention
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.netbeans.api.progress.ProgressUtils;
+import org.openide.DialogDescriptor;
+import org.openide.DialogDisplayer;
+import org.openide.NotifyDescriptor;
 import org.openide.util.NbBundle;
 
 @NbBundle.Messages({
-    "AuthenticationProcessServiceDefault_LoginDialog_Title=Login"
+    "AuthenticationProcessServiceDefault_LoginDialog_Title=Login",
+    "AuthenticationProcessServiceDefault_Message_Working=Checking credentials...",
+    "AuthenticationProcessServiceDefault_Message_IncorrectCredentials=Credentials are not corretct",
+    "AuthenticationProcessServiceDefault_Message_InexistingUser=User does not exist",
+    "AuthenticationProcessServiceDefault_Message_InactiveUser=User is inactive",
+    "AuthenticationProcessServiceDefault_Message_UnavailableService=Authentication is unavailable",
+    "AuthenticationProcessServiceDefault_Message_Exceeded=Exceeded allowed number of tries",
+    "AuthenticationProcessServiceDefault_Message_Canceled=Login canceled.",
 })
 public class AuthenticationProcessServiceDefault implements AuthenticationProcessService {
+
     public static final Logger LOGGER = Logger.getLogger(AuthenticationProcessServiceDefault.class.getName());
-    
+
     public AuthenticationProcessServiceDefault() {
         super();
     }
@@ -33,7 +44,6 @@ public class AuthenticationProcessServiceDefault implements AuthenticationProces
             throw new AuthenticationProcessException.Unavailable();
         }
 
-        final CredentialPanel.Inbound inbound = new CredentialPanel.Inbound();
         final CredentialPanel.Descriptor descriptor = new CredentialPanel.Descriptor();
         final CredentialPanel panel = new CredentialPanel(descriptor);
         final NetbeansDialogConvention<CredentialPanel.Inbound, CredentialPanel.Outbound> nbc
@@ -42,23 +52,33 @@ public class AuthenticationProcessServiceDefault implements AuthenticationProces
             final CredentialPanel.Outbound outbound = nbc.getOutbound();
             outbound.tries++;
             if (outbound.tries > MAXIMAL_NUMER_TRIES) {
-                throw new AuthenticationProcessException.Exceeded();
+                return null;
             }
-            nbc.getDialogState().changeToInfoState("Verificando credenciais...");
+            nbc.getDialogState().changeToInfoState(Bundle.AuthenticationProcessServiceDefault_Message_Working());
             try {
                 return SecurityService.getDefault().login(outbound.login, outbound.password);
             } catch (AuthenticationException.IncorrectCredentials e) {
-                nbc.getDialogState().changeToErrorState("As  credenciais estão incorretas.");
+                nbc.getDialogState().changeToErrorState(Bundle.AuthenticationProcessServiceDefault_Message_IncorrectCredentials());
             } catch (AuthenticationException.InexistingUser e) {
-                nbc.getDialogState().changeToErrorState("Estas credenciais estão incorretas.");
+                nbc.getDialogState().changeToErrorState(Bundle.AuthenticationProcessServiceDefault_Message_InexistingUser());
             } catch (AuthenticationException.InactiveUser e) {
-                nbc.getDialogState().changeToErrorState("Estas credenciais não esão ativas.");
+                nbc.getDialogState().changeToErrorState(Bundle.AuthenticationProcessServiceDefault_Message_InactiveUser());
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Failure while calling service.", e);
+                LOGGER.log(Level.SEVERE, Bundle.AuthenticationProcessServiceDefault_Message_UnavailableService(), e);
                 throw new AuthenticationProcessException.Unavailable();
             }
             return null;
         });
+        if (nbc.getOutbound().tries > MAXIMAL_NUMER_TRIES) {
+            NotifyDescriptor d = new DialogDescriptor.Message(Bundle.AuthenticationProcessServiceDefault_Message_Exceeded(), DialogDescriptor.INFORMATION_MESSAGE);
+            DialogDisplayer.getDefault().notify(d);
+            throw new AuthenticationProcessException.Exceeded();
+        }
+        if (authenticatedUser == null) {
+            NotifyDescriptor d = new DialogDescriptor.Message(Bundle.AuthenticationProcessServiceDefault_Message_Canceled(), DialogDescriptor.INFORMATION_MESSAGE);
+            DialogDisplayer.getDefault().notify(d);
+            throw new AuthenticationProcessException.Canceled();
+        }
         return authenticatedUser;
     }
 
