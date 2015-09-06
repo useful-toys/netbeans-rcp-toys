@@ -14,12 +14,14 @@ import org.openide.util.NbBundle;
  * @author Daniel Felix Ferber
  */
 @NbBundle.Messages({
-    "UserPasswordPanel_Validation_NewPasswordDifferent=New password is different.",
+    "UserPasswordPanel_Message_NewPasswordMismatch=New password is different.",
     "UserPasswordPanel_Message_Default=Provide current and new password."
 })
 public class UserPasswordPanel extends javax.swing.JPanel {
 
     private final Validation validation;
+    private final Descriptor descriptor;
+    private NotificationLineSupport notificationLine;
 
     /**
      * Describes how to build the panel.
@@ -31,17 +33,24 @@ public class UserPasswordPanel extends javax.swing.JPanel {
 
     public interface Validation {
 
-        String validatePasswordCandidate(char[] candidate) throws IllegalStateException;
+        String posValidation(Outbound outbound) throws IllegalStateException;
     }
 
+    /**
+     * Contains values to populate fields shown on the panel.
+     */
+    public static class Inbound {
+        // not used yet
+    }
+
+    /**
+     * Contains values from fields shown on the panel.
+     */
     public static class Outbound {
 
         public char[] newPassword;
         public char[] oldPassword;
     }
-
-    private final Descriptor descriptor;
-    private NotificationLineSupport notificationLine;
 
     /**
      * Creates new form UserPasswordPanel
@@ -57,34 +66,54 @@ public class UserPasswordPanel extends javax.swing.JPanel {
     }
 
     public void fromField(Outbound outbound) throws IllegalStateException {
-        executeValidationImpl();
-        outbound.newPassword = this.newPasswordField.getPassword();
-        outbound.oldPassword = this.currentPasswordField.getPassword();
+        executePreValidation();
+        fillOutbound(outbound);
+        executePosValidation(outbound);
+        if (this.validation != null) {
+            this.validation.posValidation(outbound);
+        }
     }
 
-    void toField() {
+    protected String fillOutbound(Outbound outbound) throws IllegalStateException {
+        outbound.newPassword = this.newPasswordField.getPassword();
+        outbound.oldPassword = this.currentPasswordField.getPassword();
+        return null;
+    }
+
+    protected String executePreValidation() throws IllegalStateException {
+        if (!Arrays.equals(this.newPasswordField.getPassword(), this.repeatPasswordField.getPassword())) {
+            throw new IllegalStateException(Bundle.UserPasswordPanel_Message_NewPasswordMismatch());
+        }
+        return null;
+    }
+
+    protected String executePosValidation(Outbound outbound) throws IllegalStateException {
+        return null;
+    }
+
+    void toField(Inbound inbound) {
         this.currentPasswordField.setText("");
         this.newPasswordField.setText("");
         this.repeatPasswordField.setText("");
         executeValidation();
     }
 
-    private String executeValidationImpl() throws IllegalStateException {
-        String message = null;
-        if (this.validation != null) {
-            message = this.validation.validatePasswordCandidate(newPasswordField.getPassword());
-        }
-        if (!Arrays.equals(this.newPasswordField.getPassword(), this.repeatPasswordField.getPassword())) {
-            throw new IllegalStateException(Bundle.UserPasswordPanel_Validation_NewPasswordDifferent());
-        }
-        return message;
-    }
-
-    public void executeValidation() {
+    protected void executeValidation() {
         try {
-            String message = executeValidationImpl();
-            if (message != null) {
-                this.notificationLine.setWarningMessage(message);
+            final Outbound outbound = new Outbound();
+            String message1 = executePreValidation();
+            String message2 = fillOutbound(outbound);
+            String message3 = executePosValidation(outbound);
+            String message4 = this.validation == null ? null : this.validation.posValidation(outbound);
+
+            if (message1 != null) {
+                this.notificationLine.setWarningMessage(message1);
+            } else if (message2 != null) {
+                this.notificationLine.setWarningMessage(message2);
+            } else if (message3 != null) {
+                this.notificationLine.setWarningMessage(message3);
+            } else if (message4 != null) {
+                this.notificationLine.setWarningMessage(message4);
             } else {
                 this.notificationLine.setInformationMessage(descriptor.defaultMessage);
             }
@@ -118,53 +147,38 @@ public class UserPasswordPanel extends javax.swing.JPanel {
         org.openide.awt.Mnemonics.setLocalizedText(repeatPasswordLabel, org.openide.util.NbBundle.getMessage(UserPasswordPanel.class, "UserPasswordPanel.repeatPasswordLabel.text")); // NOI18N
 
         currentPasswordField.setText(org.openide.util.NbBundle.getMessage(UserPasswordPanel.class, "UserPasswordPanel.currentPasswordField.text")); // NOI18N
-        currentPasswordField.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                passwordFieldFocusLost(evt);
-            }
-        });
         currentPasswordField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 passwordFieldActionPerformed(evt);
             }
         });
-        currentPasswordField.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyTyped(java.awt.event.KeyEvent evt) {
-                passwordFieldKeyTyped(evt);
+        currentPasswordField.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                fieldPropertyChange(evt);
             }
         });
 
         newPasswordField.setText(org.openide.util.NbBundle.getMessage(UserPasswordPanel.class, "UserPasswordPanel.newPasswordField.text")); // NOI18N
-        newPasswordField.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                passwordFieldFocusLost(evt);
-            }
-        });
         newPasswordField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 passwordFieldActionPerformed(evt);
             }
         });
-        newPasswordField.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyTyped(java.awt.event.KeyEvent evt) {
-                passwordFieldKeyTyped(evt);
+        newPasswordField.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                fieldPropertyChange(evt);
             }
         });
 
         repeatPasswordField.setText(org.openide.util.NbBundle.getMessage(UserPasswordPanel.class, "UserPasswordPanel.repeatPasswordField.text")); // NOI18N
-        repeatPasswordField.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                passwordFieldFocusLost(evt);
-            }
-        });
         repeatPasswordField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 passwordFieldActionPerformed(evt);
             }
         });
-        repeatPasswordField.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyTyped(java.awt.event.KeyEvent evt) {
-                passwordFieldKeyTyped(evt);
+        repeatPasswordField.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                fieldPropertyChange(evt);
             }
         });
 
@@ -212,13 +226,11 @@ public class UserPasswordPanel extends javax.swing.JPanel {
         executeValidation();
     }//GEN-LAST:event_passwordFieldActionPerformed
 
-    private void passwordFieldFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_passwordFieldFocusLost
-        executeValidation();
-    }//GEN-LAST:event_passwordFieldFocusLost
-
-    private void passwordFieldKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_passwordFieldKeyTyped
-        executeValidation();
-    }//GEN-LAST:event_passwordFieldKeyTyped
+    private void fieldPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_fieldPropertyChange
+        if ("password".equals(evt.getPropertyName())) {
+            executeValidation();
+        }
+    }//GEN-LAST:event_fieldPropertyChange
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

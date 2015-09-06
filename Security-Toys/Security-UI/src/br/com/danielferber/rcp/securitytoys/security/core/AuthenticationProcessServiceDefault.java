@@ -10,19 +10,18 @@ import br.com.danielferber.rcp.securitytoys.security.api.SecurityService;
 import br.com.danielferber.rcp.securitytoys.security.api.AuthenticationProcessException;
 import br.com.danielferber.rcp.securitytoys.security.api.AuthenticationProcessService;
 import br.com.danielferber.rcp.securitytoys.security.ui.CredentialPanel;
+import br.com.danielferber.rcp.securitytoys.security.ui.NetbeansDialogConvention;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.netbeans.api.progress.ProgressUtils;
-import org.openide.DialogDescriptor;
-import org.openide.DialogDisplayer;
-import org.openide.NotificationLineSupport;
 import org.openide.util.NbBundle;
-import org.openide.util.NbPreferences;
-import org.openide.util.lookup.ServiceProvider;
 
 @NbBundle.Messages({
     "AuthenticationProcessServiceDefault_LoginDialog_Title=Login"
 })
 public class AuthenticationProcessServiceDefault implements AuthenticationProcessService {
-
+    public static final Logger LOGGER = Logger.getLogger(AuthenticationProcessServiceDefault.class.getName());
+    
     public AuthenticationProcessServiceDefault() {
         super();
     }
@@ -30,85 +29,48 @@ public class AuthenticationProcessServiceDefault implements AuthenticationProces
 
     @Override
     public AuthenticatedUser executeAuthenticationQuery() throws AuthenticationProcessException {
-        if (!SecurityService.Lookup.getDefault().isServiceAvailable()) {
+        if (!SecurityService.getDefault().isServiceAvailable()) {
             throw new AuthenticationProcessException.Unavailable();
         }
-        
+
+        final CredentialPanel.Inbound inbound = new CredentialPanel.Inbound();
         final CredentialPanel.Descriptor descriptor = new CredentialPanel.Descriptor();
         final CredentialPanel panel = new CredentialPanel(descriptor);
-        final DialogDescriptor dialogDescriptor = new DialogDescriptor(panel, Bundle.AuthenticationProcessServiceDefault_LoginDialog_Title());
-        dialogDescriptor.setClosingOptions(null);
-        dialogDescriptor.setModal(true);
-        dialogDescriptor.setLeaf(true);
-        dialogDescriptor.setOptionType(DialogDescriptor.OK_CANCEL_OPTION);
-        final NotificationLineSupport notificationLine = dialogDescriptor.createNotificationLineSupport();
-        panel.setNotificationLine(notificationLine);
-        final CredentialPanel.Inbound inbound = new CredentialPanel.Inbound();
-        panel.toField(inbound);
-
-        /* Realiza até MAXIMO_TENTATIVAS tentativas. */
-        int contadorTentativas = 1;
-        while (contadorTentativas <= MAXIMAL_NUMER_TRIES) {
-
-            /* Mostra o diálogo modal e aguarda resposta. */
-            final Object result = DialogDisplayer.getDefault().notify(dialogDescriptor);
-
-            if (result == DialogDescriptor.CANCEL_OPTION || result == DialogDescriptor.CLOSED_OPTION) {
-                /* O usuário cancelou o login ou fechou o diálogo de login. */
-                throw new AuthenticationProcessException.Canceled();
-            } else if (result == DialogDescriptor.OK_OPTION) {
-                /* O usuário confirmou o login. Valida os campos. */
-                CredentialPanel.Outbound outbound = new CredentialPanel.Outbound();
-                panel.fromField(outbound);
-                /* Recorre ao serviço de autenticação. */
-                ProgressUtils.showProgressDialogAndRun(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        try {
-                            SecurityService.Lookup.getDefault().login(outbound.login, outbound.password);
-                        } catch (AuthenticationException ex) {
-                            // ignora
-                        }
-                    }
-                }, "Validar credenciais...");
-
-                Exception ex = SecurityService.Lookup.getDefault().getLastLoginException();
-                if (ex == null) {
-                    /* Se a execução chegou aqui, então o login foi aceito. */
-                    return SecurityService.Lookup.getDefault().getCurrentAuthenticatedUser();
-                } else if (ex instanceof AuthenticationException.IncorrectCredentials) {
-                    contadorTentativas++;
-                    notificationLine.setErrorMessage("Estas credenciais estão incorretas.");
-                } else if (ex instanceof AuthenticationException.InexistingUser) {
-                    contadorTentativas++;
-                    notificationLine.setErrorMessage("Estas credenciais estão incorretas.");
-                } else if (ex instanceof AuthenticationException.InactiveUser) {
-                    contadorTentativas++;
-                    notificationLine.setErrorMessage("Estas credenciais não esão ativas.");
-                } else if (ex instanceof AuthenticationException.UnavailableService) {
-                    throw new AuthenticationProcessException.Unavailable();
-                } else {
-                    throw new AuthenticationProcessException.Unavailable();
-                }
+        final NetbeansDialogConvention<CredentialPanel.Inbound, CredentialPanel.Outbound> nbc
+                = NetbeansDialogConvention.create(panel, Bundle.AuthenticationProcessServiceDefault_LoginDialog_Title());
+        final AuthenticatedUser authenticatedUser = nbc.editAndProcess(() -> {
+            final CredentialPanel.Outbound outbound = nbc.getOutbound();
+            outbound.tries++;
+            if (outbound.tries > MAXIMAL_NUMER_TRIES) {
+                throw new AuthenticationProcessException.Exceeded();
             }
-        }
-        throw new AuthenticationProcessException.Exceeded();
+            nbc.getDialogState().changeToInfoState("Verificando credenciais...");
+            try {
+                return SecurityService.getDefault().login(outbound.login, outbound.password);
+            } catch (AuthenticationException.IncorrectCredentials e) {
+                nbc.getDialogState().changeToErrorState("As  credenciais estão incorretas.");
+            } catch (AuthenticationException.InexistingUser e) {
+                nbc.getDialogState().changeToErrorState("Estas credenciais estão incorretas.");
+            } catch (AuthenticationException.InactiveUser e) {
+                nbc.getDialogState().changeToErrorState("Estas credenciais não esão ativas.");
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Failure while calling service.", e);
+                throw new AuthenticationProcessException.Unavailable();
+            }
+            return null;
+        });
+        return authenticatedUser;
     }
 
     @Override
     public void executeLogoff() {
-        ProgressUtils.showProgressDialogAndRun(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    if (SecurityService.Lookup.getDefault().getCurrentAuthenticatedUser() != null) {
-                        SecurityService.Lookup.getDefault().logoff();
-                    }
-                } catch (Exception ex) {
-                    // ignora
+        ProgressUtils.showProgressDialogAndRun(() -> {
+            try {
+                if (SecurityService.getDefault().getCurrentAuthenticatedUser() != null) {
+                    SecurityService.getDefault().logoff();
                 }
+            } catch (Exception ex) {
+                // ignora
             }
         }, "Logoff...");
     }

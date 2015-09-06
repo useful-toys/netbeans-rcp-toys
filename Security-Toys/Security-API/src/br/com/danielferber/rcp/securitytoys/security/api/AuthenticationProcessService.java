@@ -11,7 +11,7 @@ public interface AuthenticationProcessService {
     static AuthenticationProcessService getDefault() {
         final AuthenticationProcessService instance = Lookup.getDefault().lookup(AuthenticationProcessService.class);
         if (instance == null) {
-            throw new IllegalStateException("No module provides AuthenticationProcessService.");
+            throw new IllegalStateException("No AuthenticationProcessService implementation.");
         }
         return instance;
     }

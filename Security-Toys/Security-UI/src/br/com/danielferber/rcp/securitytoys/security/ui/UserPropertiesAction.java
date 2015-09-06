@@ -47,7 +47,7 @@ public final class UserPropertiesAction implements ActionListener {
     }
 
     private void runShowUserPropertiesImpl() {
-        final AuthenticatedUser authenticatedUser = SecurityService.Lookup.getDefault().getCurrentAuthenticatedUser();
+        final AuthenticatedUser authenticatedUser = SecurityService.getDefault().getCurrentAuthenticatedUser();
         if (authenticatedUser == null) {
             final NotifyDescriptor nd = new NotifyDescriptor.Message(Bundle.UserPropertiesAction_Message_NoAuthenticatedUser(), NotifyDescriptor.INFORMATION_MESSAGE);
             DialogDisplayer.getDefault().notify(nd);
@@ -55,7 +55,7 @@ public final class UserPropertiesAction implements ActionListener {
         }
         final UserPropertiesPanel.Descriptor descriptor = new UserPropertiesPanel.Descriptor();
         descriptor.editableProperties = false;
-        descriptor.editablePassword = SecurityService.Lookup.getDefault().getPasswordService().canChangePassword(authenticatedUser.getLogin());
+        descriptor.editablePassword = SecurityService.getDefault().getPasswordService().canChangePassword(authenticatedUser.getLogin());
         final UserPropertiesPanel panel = new UserPropertiesPanel(descriptor, null);
         final DialogDescriptor dialogDescriptor = new DialogDescriptor(panel, Bundle.UserPropertiesAction_UserInfoDialogTitle());
         dialogDescriptor.setClosingOptions(null);

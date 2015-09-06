@@ -11,7 +11,7 @@ import br.com.danielferber.rcp.securitytoys.security.api.SecurityService;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.Action;
-import javax.swing.SwingUtilities;
+import org.netbeans.api.progress.ProgressUtils;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
 import org.openide.NotificationLineSupport;
@@ -35,7 +35,8 @@ import org.openide.util.NbBundle.Messages;
     "UserPasswordAction_Message_IncorrectCredentials=Current password is wrong",
     "UserPasswordAction_Message_PasswordTooWeak=Password is too weak",
     "UserPasswordAction_Message_PasswordChangeNotAllowed=Password change not allowed",
-    "UserPasswordAction_Message_PasswordChangeSuccessful=Password successfully changed"})
+    "UserPasswordAction_Message_PasswordChangeSuccessful=Password successfully changed",
+    "UserPasswordAction_Message_WaitingServer=Please wait..."})
 public final class UserPasswordAction implements ActionListener {
 
     public static final String CATEGORY = "Help";
@@ -43,63 +44,61 @@ public final class UserPasswordAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                runChangePasswordImpl();
-            }
-        });
+        runDialog();
     }
 
-    private void runChangePasswordImpl() {
-        final AuthenticatedUser authenticatedUser = SecurityService.Lookup.getDefault().getCurrentAuthenticatedUser();
+    protected void runDialog() {
+        final AuthenticatedUser authenticatedUser = SecurityService.getDefault().getCurrentAuthenticatedUser();
         if (authenticatedUser == null) {
             final NotifyDescriptor nd = new NotifyDescriptor.Message(Bundle.UserPasswordAction_Message_NoAuthenticatedUser(), NotifyDescriptor.INFORMATION_MESSAGE);
             DialogDisplayer.getDefault().notify(nd);
-            return;
         }
-        if (!SecurityService.Lookup.getDefault().getPasswordService().canChangePassword(authenticatedUser.getLogin())) {
+        if (!SecurityService.getDefault().getPasswordService().canChangePassword(authenticatedUser.getLogin())) {
             final NotifyDescriptor nd = new NotifyDescriptor.Message(Bundle.UserPasswordAction_Message_PasswordChangeNotAllowed(), NotifyDescriptor.INFORMATION_MESSAGE);
             DialogDisplayer.getDefault().notify(nd);
-            return;
         }
-
+        
         final UserPasswordPanel.Descriptor descriptor = new UserPasswordPanel.Descriptor();
         final UserPasswordPanel panel = new UserPasswordPanel(descriptor, null);
         final DialogDescriptor dialogDescriptor = new DialogDescriptor(panel, Bundle.UserPropertiesPanel_ChangeUserPasswordDialogTitle());
         dialogDescriptor.setClosingOptions(null);
         dialogDescriptor.setModal(true);
         dialogDescriptor.setLeaf(true);
-        dialogDescriptor.setOptionType(NotifyDescriptor.DEFAULT_OPTION);
+        dialogDescriptor.setOptionType(NotifyDescriptor.OK_CANCEL_OPTION);
         final NotificationLineSupport notificationLine = dialogDescriptor.createNotificationLineSupport();
         panel.setNotificationLine(notificationLine);
-        panel.toField();
-        dialogDescriptor.setButtonListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ev) {
-                if (ev.getSource() == DialogDescriptor.OK_OPTION) {
-                    try {
-                        final UserPasswordPanel.Outbound outbound = new UserPasswordPanel.Outbound();
-                        panel.fromField(outbound);
-                        dialogDescriptor.setClosingOptions(null);
-                        SecurityService.Lookup.getDefault().getPasswordService().changePassword(authenticatedUser.getLogin(), outbound.oldPassword, outbound.newPassword);
-                        final NotifyDescriptor nd = new NotifyDescriptor.Message(Bundle.UserPasswordAction_Message_PasswordChangeSuccessful(), NotifyDescriptor.INFORMATION_MESSAGE);
-                        DialogDisplayer.getDefault().notify(nd);
-                        dialogDescriptor.setClosingOptions(null);
-                    } catch (PasswordException.IncorrectCredentials e) {
-                        notificationLine.setErrorMessage(Bundle.UserPasswordAction_Message_IncorrectCredentials());
-                        dialogDescriptor.setClosingOptions(new Object[]{});
-                    } catch (PasswordException.NotAllowed e) {
-                        notificationLine.setErrorMessage(Bundle.UserPasswordAction_Message_PasswordChangeNotAllowed());
-                        dialogDescriptor.setClosingOptions(new Object[]{});
-                    } catch (PasswordException.TooWeak e) {
-                        notificationLine.setErrorMessage(Bundle.UserPasswordAction_Message_PasswordTooWeak());
-                        dialogDescriptor.setClosingOptions(new Object[]{});
-                    } catch (PasswordException | IllegalStateException e) {
-                        notificationLine.setErrorMessage(e.getMessage());
-                        dialogDescriptor.setClosingOptions(new Object[]{});
-                    }
+        final UserPasswordPanel.Inbound inbound = new UserPasswordPanel.Inbound();
+        panel.toField(inbound);
+
+        final UserPasswordPanel.Outbound outbound = new UserPasswordPanel.Outbound();
+        dialogDescriptor.setButtonListener((ActionEvent ev) -> {
+            if (ev.getSource() == DialogDescriptor.OK_OPTION) {
+                try {
+                    panel.fromField(outbound);
+                    notificationLine.setInformationMessage(Bundle.UserPasswordAction_Message_WaitingServer());
+                    ProgressUtils.showProgressDialogAndRun(() -> {
+                        try {
+                            SecurityService.getDefault().getPasswordService().changePassword(authenticatedUser.getLogin(), outbound.oldPassword, outbound.newPassword);
+                            final NotifyDescriptor nd = new NotifyDescriptor.Message(Bundle.UserPasswordAction_Message_PasswordChangeSuccessful(), NotifyDescriptor.INFORMATION_MESSAGE);
+                            DialogDisplayer.getDefault().notify(nd);
+                        } catch (PasswordException.IncorrectCredentials e) {
+                            throw new IllegalStateException(Bundle.UserPasswordAction_Message_IncorrectCredentials());
+                        } catch (PasswordException.NotAllowed e) {
+                            throw new IllegalStateException(Bundle.UserPasswordAction_Message_PasswordChangeNotAllowed());
+                        } catch (PasswordException.TooWeak e) {
+                            throw new IllegalStateException(Bundle.UserPasswordAction_Message_PasswordTooWeak());
+                        } catch (PasswordException e) {
+                            throw new IllegalStateException(e.getMessage());
+                        }
+                    }, "Changing password...");
+                } catch (IllegalStateException e) {
+                    notificationLine.setErrorMessage(e.getMessage());
+                    dialogDescriptor.setClosingOptions(new Object[]{});
+                    return;
                 }
+                dialogDescriptor.setClosingOptions(null);
+            } else {
+                dialogDescriptor.setClosingOptions(null);
             }
         });
 

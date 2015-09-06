@@ -1,7 +1,8 @@
 package br.com.danielferber.rcp.securitytoys.security.ui;
 
-import br.com.danielferber.rcp.securitytoys.security.core.AuthenticationProcessServiceDefault;
-import org.openide.NotificationLineSupport;
+import java.awt.Component;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import org.openide.util.NbBundle;
 import org.openide.util.NbPreferences;
 
@@ -14,10 +15,11 @@ import org.openide.util.NbPreferences;
     "CredentialPanel_Message_LoginRequired=Login must not be empty.",
     "CredentialPanel_Message_PasswordRequired=Password must not be empty."
 })
-public class CredentialPanel extends javax.swing.JPanel {
+public class CredentialPanel extends javax.swing.JPanel implements DialogConvention.Support<CredentialPanel.Inbound, CredentialPanel.Outbound> {
 
+    public static final String PREF_PREVISOUS_LOGIN = "login";
     private final Descriptor descriptor;
-    private NotificationLineSupport notificationLine;
+    private final CredentialPanelDialogConvention dialogConvention;
 
     /**
      * Describes how to build the panel.
@@ -28,15 +30,40 @@ public class CredentialPanel extends javax.swing.JPanel {
         public boolean suggestPrevisouLogin = true;
     }
 
+    /**
+     * Contains values to populate fields shown on the panel.
+     */
     public static class Inbound {
 
         public String login;
     }
 
+    /**
+     * Contains values from fields shown on the panel.
+     */
     public static class Outbound {
 
+        public int tries = 0;
         public String login;
         public char[] password;
+    }
+
+    private class FieldDocumentListener implements DocumentListener {
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            dialogConvention.scheduleValidation();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            dialogConvention.scheduleValidation();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            dialogConvention.scheduleValidation();
+        }
     }
 
     /**
@@ -44,73 +71,75 @@ public class CredentialPanel extends javax.swing.JPanel {
      */
     public CredentialPanel(Descriptor descriptor) {
         initComponents();
+        final FieldDocumentListener fieldDocumentListener = new FieldDocumentListener();
+        this.passwordField.getDocument().addDocumentListener(fieldDocumentListener);
+        this.loginField.getDocument().addDocumentListener(fieldDocumentListener);
         this.descriptor = descriptor;
+        this.dialogConvention = new CredentialPanelDialogConvention(this, descriptor.defaultMessage);
     }
 
-    public void setNotificationLine(NotificationLineSupport notificationLine) {
-        this.notificationLine = notificationLine;
-    }
+    private class CredentialPanelDialogConvention extends DialogConventionImpl<Inbound, Outbound> {
 
-    public void fromField(Outbound outbound) throws IllegalStateException {
-        executePreValidation();
-        fillOutbound(outbound);
-        executePosValidation(outbound);
-        NbPreferences.forModule(CredentialPanel.class).put("login", outbound.login);
-    }
-
-    protected String fillOutbound(Outbound outbound) throws IllegalStateException {
-        outbound.login = this.loginField.getText().trim();
-        outbound.password = this.passwordField.getPassword();
-        return null;
-    }
-
-    protected String executePreValidation() throws IllegalStateException {
-        return null;
-    }
-
-    protected String executePosValidation(Outbound outbound) throws IllegalStateException {
-        String message = null;
-        if (outbound.login.length() == 0) {
-            throw new IllegalStateException();
+        public CredentialPanelDialogConvention(Component source, String defaultMessage) {
+            super(source, defaultMessage);
         }
-        if (outbound.password.length == 0) {
-            throw new IllegalStateException();
+
+        @Override
+        public Inbound createInbound() {
+            return new Inbound();
         }
-        return message;
-    }
 
-    public void toField(Inbound inbound) {
-        if (inbound.login == null) {
-            final String lastLogin = NbPreferences.forModule(CredentialPanel.class).get("login", "");
-            this.loginField.setText(lastLogin);
-        } else {
-            this.loginField.setText(inbound.login);
+        @Override
+        public Outbound createOutbound() {
+            return new Outbound();
         }
-        this.passwordField.setText("");
-        executeValidation();
-    }
 
-    protected void executeValidation() {
-        try {
-            final Outbound outbound = new Outbound();
-            String message1 = executePreValidation();
-            String message2 = fillOutbound(outbound);
-            String message3 = executePosValidation(outbound);
-
-            if (message1 != null) {
-                this.notificationLine.setWarningMessage(message1);
-            } else if (message2 != null) {
-                this.notificationLine.setWarningMessage(message2);
-            } else if (message3 != null) {
-                this.notificationLine.setWarningMessage(message3);
-            } else {
-                this.notificationLine.setInformationMessage(descriptor.defaultMessage);
-            }
-        } catch (IllegalStateException e) {
-            if (this.notificationLine != null) {
-                this.notificationLine.setErrorMessage(e.getMessage());
+        @Override
+        protected void loadInboundDefaults(Inbound inbound) {
+            if (inbound.login == null) {
+                inbound.login = NbPreferences.forModule(CredentialPanel.class).get(PREF_PREVISOUS_LOGIN, "");
             }
         }
+
+        @Override
+        protected void saveOutboundDefaults(Outbound outbound) {
+            if (outbound.login != null && ! outbound.login.isEmpty()) {
+                NbPreferences.forModule(CredentialPanel.class).put(PREF_PREVISOUS_LOGIN, outbound.login);
+            }
+        }
+        
+
+        @Override
+        protected void convertInboundToFields(Inbound inbound) {
+            loginField.setText(inbound.login);
+            passwordField.setText("");
+        }
+
+        @Override
+        protected String convertFieldToOutbound(Outbound outbound) throws IllegalStateException {
+            outbound.login = loginField.getText().trim();
+            outbound.password = passwordField.getPassword();
+            return null;
+        }
+
+        @Override
+        protected String executePosValidation(Outbound outbound) throws IllegalStateException {
+            String message = null;
+            if (outbound.login.length() == 0) {
+                throw new IllegalStateException(Bundle.CredentialPanel_Message_LoginRequired());
+            }
+            if (outbound.password.length == 0) {
+                throw new IllegalStateException(Bundle.CredentialPanel_Message_PasswordRequired());
+            }
+            return message;
+        }
+
+          
+    }
+
+    @Override
+    public DialogConvention getDialogConvention() {
+        return dialogConvention;
     }
 
     /**
@@ -135,13 +164,23 @@ public class CredentialPanel extends javax.swing.JPanel {
                 loginFieldPropertyChange(evt);
             }
         });
+        loginField.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                loginFieldKeyTyped(evt);
+            }
+        });
 
         org.openide.awt.Mnemonics.setLocalizedText(passwordLabel, org.openide.util.NbBundle.getMessage(CredentialPanel.class, "CredentialPanel.passwordLabel.text")); // NOI18N
 
         passwordField.setText(org.openide.util.NbBundle.getMessage(CredentialPanel.class, "CredentialPanel.passwordField.text")); // NOI18N
         passwordField.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
             public void propertyChange(java.beans.PropertyChangeEvent evt) {
-                passwordFieldPropertyChange(evt);
+                fieldPropertyChange(evt);
+            }
+        });
+        passwordField.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                passwordFieldKeyTyped(evt);
             }
         });
 
@@ -178,16 +217,16 @@ public class CredentialPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void loginFieldPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_loginFieldPropertyChange
-        if ("text".equals(evt.getPropertyName())) {
-            executeValidation();
-        }
     }//GEN-LAST:event_loginFieldPropertyChange
 
-    private void passwordFieldPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_passwordFieldPropertyChange
-        if ("text".equals(evt.getPropertyName())) {
-            executeValidation();
-        }
-    }//GEN-LAST:event_passwordFieldPropertyChange
+    private void fieldPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_fieldPropertyChange
+    }//GEN-LAST:event_fieldPropertyChange
+
+    private void loginFieldKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_loginFieldKeyTyped
+    }//GEN-LAST:event_loginFieldKeyTyped
+
+    private void passwordFieldKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_passwordFieldKeyTyped
+    }//GEN-LAST:event_passwordFieldKeyTyped
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField loginField;

@@ -7,7 +7,6 @@ package br.com.danielferber.rcp.securitytoys.security.ui;
 
 import br.com.danielferber.rcp.securitytoys.security.api.AuthenticatedUser;
 import br.com.danielferber.rcp.securitytoys.security.api.SecurityService;
-import br.com.danielferber.rcp.securitytoys.security.ext.AuthenticatedUserStatusLineElementProvider;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JLabel;
@@ -49,7 +48,7 @@ public class AuthenticatedUserComponent extends JLabel {
     }
 
     protected String retrieveUserName() {
-        final AuthenticatedUser user = SecurityService.Lookup.getDefault().getCurrentAuthenticatedUser();
+        final AuthenticatedUser user = SecurityService.getDefault().getCurrentAuthenticatedUser();
         if (user == null) {
             return Bundle.AuthenticatedUserComponent_Label_Anonimous();
         } else {
