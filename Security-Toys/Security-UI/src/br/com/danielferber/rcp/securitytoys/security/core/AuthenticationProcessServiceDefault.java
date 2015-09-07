@@ -59,15 +59,18 @@ public class AuthenticationProcessServiceDefault implements AuthenticationProces
                 return SecurityService.getDefault().login(outbound.login, outbound.password);
             } catch (AuthenticationException.IncorrectCredentials e) {
                 nbc.getDialogState().changeToErrorState(Bundle.AuthenticationProcessServiceDefault_Message_IncorrectCredentials());
+                throw new NetbeansDialogConvention.PreventClose();
             } catch (AuthenticationException.InexistingUser e) {
                 nbc.getDialogState().changeToErrorState(Bundle.AuthenticationProcessServiceDefault_Message_InexistingUser());
+                throw new NetbeansDialogConvention.PreventClose();
             } catch (AuthenticationException.InactiveUser e) {
                 nbc.getDialogState().changeToErrorState(Bundle.AuthenticationProcessServiceDefault_Message_InactiveUser());
+                throw new NetbeansDialogConvention.PreventClose();
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, Bundle.AuthenticationProcessServiceDefault_Message_UnavailableService(), e);
-                throw new AuthenticationProcessException.Unavailable();
+                nbc.getDialogState().changeToErrorState(Bundle.AuthenticationProcessServiceDefault_Message_UnavailableService());
+                throw new NetbeansDialogConvention.PreventClose();
             }
-            return null;
         });
         if (nbc.getOutbound().tries > MAXIMAL_NUMER_TRIES) {
             NotifyDescriptor d = new DialogDescriptor.Message(Bundle.AuthenticationProcessServiceDefault_Message_Exceeded(), DialogDescriptor.INFORMATION_MESSAGE);

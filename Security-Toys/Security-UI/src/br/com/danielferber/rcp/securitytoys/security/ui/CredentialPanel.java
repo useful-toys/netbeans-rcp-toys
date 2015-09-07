@@ -70,11 +70,11 @@ public class CredentialPanel extends javax.swing.JPanel implements DialogConvent
      * Creates new form CredenciaisPanel
      */
     public CredentialPanel(Descriptor descriptor) {
+        this.descriptor = descriptor;
         initComponents();
         final FieldDocumentListener fieldDocumentListener = new FieldDocumentListener();
         this.passwordField.getDocument().addDocumentListener(fieldDocumentListener);
         this.loginField.getDocument().addDocumentListener(fieldDocumentListener);
-        this.descriptor = descriptor;
         this.dialogConvention = new CredentialPanelDialogConvention(this, descriptor.defaultMessage);
     }
 

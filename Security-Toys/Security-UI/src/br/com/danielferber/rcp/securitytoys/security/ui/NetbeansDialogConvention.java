@@ -90,6 +90,10 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
 
     public void show() {
         dialogDescriptor.setOptionType(DialogDescriptor.DEFAULT_OPTION);
+        if (inbound != null) {
+            dialogConvention.toFields(inbound);
+        }
+        this.updateDialogDescriptorDefaultMessage();
         DialogDisplayer.getDefault().notify(dialogDescriptor);
     }
 
@@ -124,14 +128,13 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
 
     private class EditAndProcessContext {
 
+        boolean preventClose;
         Object result = null;
         Exception exception = null;
     }
 
     public <T> T editAndProcess(final Callable<T> callable) {
         final EditAndProcessContext context = new EditAndProcessContext();
-        context.exception = null;
-        context.result = null;
         dialogDescriptor.setOptionType(DialogDescriptor.OK_CANCEL_OPTION);
         dialogDescriptor.setButtonListener((ActionEvent ev) -> {
             if (ev.getSource() == DialogDescriptor.OK_OPTION) {
@@ -143,14 +146,19 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
                     dialogDescriptor.setClosingOptions(new Object[]{});
                     return;
                 }
+                context.exception = null;
+                context.result = null;
+                context.preventClose = false;
                 ProgressUtils.showProgressDialogAndRun(() -> {
                     try {
                         context.result = callable.call();
+                    } catch (PreventClose e) {
+                        context.preventClose = true;
                     } catch (Exception e) {
                         context.exception = e;
                     }
                 }, "Wait...");
-                if (!dialogConvention.getDialogState().isOkAllowed()) {
+                if (context.preventClose || !dialogConvention.getDialogState().isOkAllowed()) {
                     dialogDescriptor.setClosingOptions(new Object[]{});
                     return;
                 }
@@ -171,5 +179,15 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
         this.dialogConvention.getDialogState().removePropertyChangeListener(new DialogConventionPropertyChangeListener());
         this.exception = context.exception;
         return (T) context.result;
+    }
+
+    public static class PreventClose extends RuntimeException {
+
+        public PreventClose() {
+        }
+
+        public PreventClose(String message) {
+            super(message);
+        }
     }
 }

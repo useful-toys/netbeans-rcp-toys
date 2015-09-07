@@ -6,10 +6,13 @@
 package br.com.danielferber.rcp.securitytoys.security.ui;
 
 import br.com.danielferber.rcp.securitytoys.security.api.AuthenticatedUser;
+import static br.com.danielferber.rcp.securitytoys.security.ui.CredentialPanel.PREF_PREVISOUS_LOGIN;
+import java.awt.Component;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
 import org.openide.NotificationLineSupport;
 import org.openide.util.NbBundle;
+import org.openide.util.NbPreferences;
 
 /**
  *
@@ -19,7 +22,11 @@ import org.openide.util.NbBundle;
     "UserPropertiesPanel_ChangeUserPasswordDialogTitle=Change user password",
     "UserPropertiesPanel_DefaultMessage=User information"
 })
-public class UserPropertiesPanel extends javax.swing.JPanel {
+public class UserPropertiesPanel extends javax.swing.JPanel implements DialogConvention.Support<UserPropertiesPanel.Inbound, UserPropertiesPanel.Outbound> {
+
+    private final Descriptor descriptor;
+    private final Validation validation;
+    private final UserPropertiesDialogConvention dialogConvention;
 
     /**
      * Describes how to build the panel.
@@ -47,7 +54,7 @@ public class UserPropertiesPanel extends javax.swing.JPanel {
             super();
         }
 
-        public Inbound(AuthenticatedUser authenticatedUser) {
+        public void fromObject(AuthenticatedUser authenticatedUser) {
             if (authenticatedUser == null) {
                 throw new IllegalArgumentException("authenticatedUser == null");
             }
@@ -60,30 +67,45 @@ public class UserPropertiesPanel extends javax.swing.JPanel {
 
         public String login;
         public String name;
-        public char[] newPassword;
-        public char[] oldPassword;
     }
-
-    private final Descriptor descriptor;
-    private final Validation validation;
-    private NotificationLineSupport notificationLine;
-    private UserPasswordPanel.Outbound passwordOutbound = null;
 
     /**
      * Creates new form UserPropertiesPanel
      */
     public UserPropertiesPanel(Descriptor descriptor, Validation validation) {
-        initComponents();
         this.descriptor = descriptor;
+        initComponents();
         this.validation = validation;
+        this.dialogConvention = new UserPropertiesDialogConvention(this, descriptor.defaultMessage);
         updateFieldEditable();
     }
 
-    public void toField(Inbound inbound) {
-        loginField.setText(inbound.login);
-        nameField.setText(inbound.name);
-        executeValidation();
-        updateFieldEditable();
+    private class UserPropertiesDialogConvention extends DialogConventionImpl<Inbound, Outbound> {
+
+        public UserPropertiesDialogConvention(Component source, String defaultMessage) {
+            super(source, defaultMessage);
+        }
+
+        @Override
+        public Inbound createInbound() {
+            return new Inbound();
+        }
+
+        @Override
+        public Outbound createOutbound() {
+            return new Outbound();
+        }
+
+        @Override
+        protected void convertInboundToFields(Inbound inbound) {
+            loginField.setText(inbound.login);
+            nameField.setText(inbound.name);
+        }
+    }
+
+    @Override
+    public DialogConvention getDialogConvention() {
+        return dialogConvention;
     }
 
     private void updateFieldEditable() {
@@ -93,49 +115,8 @@ public class UserPropertiesPanel extends javax.swing.JPanel {
         this.nameField.setEditable(descriptor.editableProperties && descriptor.editableName && enabled);
     }
 
-    public void fromField(Outbound outbound) throws IllegalStateException {
-        executeValidationImpl();
-        outbound.name = nameField.getText();
-        outbound.login = loginField.getText();
-        if (passwordOutbound != null) {
-            outbound.newPassword = passwordOutbound.newPassword;
-            outbound.oldPassword = passwordOutbound.oldPassword;
-        } else {
-            outbound.newPassword = null;
-            outbound.oldPassword = null;
-        }
-    }
-
-    private String executeValidationImpl() throws IllegalStateException {
-        String message = null;
-        if (validation != null) {
-            message = validation.validateLoginCandidate(loginField.getText());
-        }
-        return message;
-    }
-
-    public void executeValidation() {
-        try {
-            String message = executeValidationImpl();
-            if (message != null) {
-                this.notificationLine.setWarningMessage(message);
-            } else {
-                this.notificationLine.setInformationMessage(descriptor.defaultMessage);
-            }
-        } catch (IllegalStateException e) {
-            if (this.notificationLine != null) {
-                this.notificationLine.setErrorMessage(e.getMessage());
-            }
-        }
-    }
-
     private void runChangePasswordImpl() {
         UserPasswordAction.runAction(this);
-    }
-
-    public void setNotificationLine(NotificationLineSupport notificationLine) {
-        this.notificationLine = notificationLine;
-        this.notificationLine.setInformationMessage(descriptor.defaultMessage);
     }
 
     /**

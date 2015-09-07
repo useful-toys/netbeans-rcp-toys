@@ -5,8 +5,10 @@
  */
 package br.com.danielferber.rcp.securitytoys.security.ui;
 
+import java.awt.Component;
 import java.util.Arrays;
-import org.openide.NotificationLineSupport;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import org.openide.util.NbBundle;
 
 /**
@@ -17,11 +19,11 @@ import org.openide.util.NbBundle;
     "UserPasswordPanel_Message_NewPasswordMismatch=New password is different.",
     "UserPasswordPanel_Message_Default=Provide current and new password."
 })
-public class UserPasswordPanel extends javax.swing.JPanel {
+public class UserPasswordPanel extends javax.swing.JPanel implements DialogConvention.Support<UserPasswordPanel.Inbound, UserPasswordPanel.Outbound> {
 
     private final Validation validation;
     private final Descriptor descriptor;
-    private NotificationLineSupport notificationLine;
+    private final UserPasswordDialogConvention dialogConvention;
 
     /**
      * Describes how to build the panel.
@@ -57,70 +59,74 @@ public class UserPasswordPanel extends javax.swing.JPanel {
      */
     public UserPasswordPanel(Descriptor descriptor, Validation validation) {
         this.descriptor = descriptor;
+        final FieldDocumentListener fieldDocumentListener = new FieldDocumentListener();
         initComponents();
+        this.currentPasswordField.getDocument().addDocumentListener(fieldDocumentListener);
+        this.newPasswordField.getDocument().addDocumentListener(fieldDocumentListener);
+        this.repeatPasswordField.getDocument().addDocumentListener(fieldDocumentListener);
         this.validation = validation;
+        this.dialogConvention = new UserPasswordDialogConvention(this, descriptor.defaultMessage);
     }
 
-    public void setNotificationLine(NotificationLineSupport notificationLine) {
-        this.notificationLine = notificationLine;
-    }
+    private class FieldDocumentListener implements DocumentListener {
 
-    public void fromField(Outbound outbound) throws IllegalStateException {
-        executePreValidation();
-        fillOutbound(outbound);
-        executePosValidation(outbound);
-        if (this.validation != null) {
-            this.validation.posValidation(outbound);
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            dialogConvention.scheduleValidation();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            dialogConvention.scheduleValidation();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            dialogConvention.scheduleValidation();
         }
     }
 
-    protected String fillOutbound(Outbound outbound) throws IllegalStateException {
-        outbound.newPassword = this.newPasswordField.getPassword();
-        outbound.oldPassword = this.currentPasswordField.getPassword();
-        return null;
+    @Override
+    public DialogConvention getDialogConvention() {
+        return dialogConvention;
     }
 
-    protected String executePreValidation() throws IllegalStateException {
-        if (!Arrays.equals(this.newPasswordField.getPassword(), this.repeatPasswordField.getPassword())) {
-            throw new IllegalStateException(Bundle.UserPasswordPanel_Message_NewPasswordMismatch());
+    private class UserPasswordDialogConvention extends DialogConventionImpl<Inbound, Outbound> {
+
+        public UserPasswordDialogConvention(Component source, String defaultMessage) {
+            super(source, defaultMessage);
         }
-        return null;
-    }
 
-    protected String executePosValidation(Outbound outbound) throws IllegalStateException {
-        return null;
-    }
+        @Override
+        public Inbound createInbound() {
+            return new Inbound();
+        }
 
-    void toField(Inbound inbound) {
-        this.currentPasswordField.setText("");
-        this.newPasswordField.setText("");
-        this.repeatPasswordField.setText("");
-        executeValidation();
-    }
+        @Override
+        public Outbound createOutbound() {
+            return new Outbound();
+        }
 
-    protected void executeValidation() {
-        try {
-            final Outbound outbound = new Outbound();
-            String message1 = executePreValidation();
-            String message2 = fillOutbound(outbound);
-            String message3 = executePosValidation(outbound);
-            String message4 = this.validation == null ? null : this.validation.posValidation(outbound);
+        @Override
+        protected void convertInboundToFields(Inbound inbound) {
+            currentPasswordField.setText("");
+            newPasswordField.setText("");
+            repeatPasswordField.setText("");
+        }
 
-            if (message1 != null) {
-                this.notificationLine.setWarningMessage(message1);
-            } else if (message2 != null) {
-                this.notificationLine.setWarningMessage(message2);
-            } else if (message3 != null) {
-                this.notificationLine.setWarningMessage(message3);
-            } else if (message4 != null) {
-                this.notificationLine.setWarningMessage(message4);
-            } else {
-                this.notificationLine.setInformationMessage(descriptor.defaultMessage);
+        @Override
+        protected String convertFieldToOutbound(Outbound outbound) throws IllegalStateException {
+            outbound.newPassword = newPasswordField.getPassword();
+            outbound.oldPassword = currentPasswordField.getPassword();
+            return null;
+        }
+
+        @Override
+        protected String executePreValidation() throws IllegalStateException {
+            if (!Arrays.equals(newPasswordField.getPassword(), repeatPasswordField.getPassword())) {
+                throw new IllegalStateException(Bundle.UserPasswordPanel_Message_NewPasswordMismatch());
             }
-        } catch (IllegalStateException e) {
-            if (this.notificationLine != null) {
-                this.notificationLine.setErrorMessage(e.getMessage());
-            }
+            return null;
         }
     }
 
@@ -223,13 +229,9 @@ public class UserPasswordPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void passwordFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_passwordFieldActionPerformed
-        executeValidation();
     }//GEN-LAST:event_passwordFieldActionPerformed
 
     private void fieldPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_fieldPropertyChange
-        if ("password".equals(evt.getPropertyName())) {
-            executeValidation();
-        }
     }//GEN-LAST:event_fieldPropertyChange
 
 

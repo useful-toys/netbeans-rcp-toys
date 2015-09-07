@@ -28,49 +28,35 @@ import org.openide.util.NbBundle.Messages;
 )
 @ActionReference(path = "Menu/Help", position = 1300)
 @Messages({"UserPropertiesAction_Caption=User properties",
-    "UserPropertiesAction_UserInfoDialogTitle=User information",
+    "UserPropertiesAction_Dialog_Title=User information",
     "UserPropertiesAction_Message_NoAuthenticatedUser=No authenticated user"})
 public final class UserPropertiesAction implements ActionListener {
 
     public static final String CATEGORY = "Help";
     public static final String ID = "br.com.danielferber.rcp.securitytoys.ui.UserPropertiesAction";
-    
+
     @Override
     public void actionPerformed(ActionEvent e) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                runShowUserPropertiesImpl();
-            }
-
-        });
-    }
-
-    private void runShowUserPropertiesImpl() {
         final AuthenticatedUser authenticatedUser = SecurityService.getDefault().getCurrentAuthenticatedUser();
         if (authenticatedUser == null) {
-            final NotifyDescriptor nd = new NotifyDescriptor.Message(Bundle.UserPropertiesAction_Message_NoAuthenticatedUser(), NotifyDescriptor.INFORMATION_MESSAGE);
+            final NotifyDescriptor nd = new NotifyDescriptor.Message(Bundle.UserPasswordAction_Message_NoAuthenticatedUser(), NotifyDescriptor.INFORMATION_MESSAGE);
             DialogDisplayer.getDefault().notify(nd);
             return;
         }
+
         final UserPropertiesPanel.Descriptor descriptor = new UserPropertiesPanel.Descriptor();
+        // API does not yet support user information editing.
         descriptor.editableProperties = false;
         descriptor.editablePassword = SecurityService.getDefault().getPasswordService().canChangePassword(authenticatedUser.getLogin());
         final UserPropertiesPanel panel = new UserPropertiesPanel(descriptor, null);
-        final DialogDescriptor dialogDescriptor = new DialogDescriptor(panel, Bundle.UserPropertiesAction_UserInfoDialogTitle());
-        dialogDescriptor.setClosingOptions(null);
-        dialogDescriptor.setModal(true);
-        dialogDescriptor.setLeaf(true);
-        dialogDescriptor.setOptionType(NotifyDescriptor.DEFAULT_OPTION);
-        panel.setNotificationLine(dialogDescriptor.createNotificationLineSupport());
-        panel.toField(new UserPropertiesPanel.Inbound(authenticatedUser));
-        panel.executeValidation();
-        DialogDisplayer.getDefault().notify(dialogDescriptor);
-    }
-    
-    public static void runAction(Object source) {
-        Action action=org.openide.awt.Actions.forID(CATEGORY, ID);
-        action.actionPerformed(new ActionEvent(source, ActionEvent.ACTION_PERFORMED, null));
+        final NetbeansDialogConvention<UserPropertiesPanel.Inbound, UserPropertiesPanel.Outbound> nbc
+                = NetbeansDialogConvention.create(panel, Bundle.UserPropertiesAction_Dialog_Title());
+        nbc.getInbound().fromObject(authenticatedUser);
+        nbc.show();
     }
 
+    public static void runAction(Object source) {
+        Action action = org.openide.awt.Actions.forID(CATEGORY, ID);
+        action.actionPerformed(new ActionEvent(source, ActionEvent.ACTION_PERFORMED, null));
+    }
 }
