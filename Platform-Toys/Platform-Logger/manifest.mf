@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.usefultoys.rcp.platform.logger
+OpenIDE-Module-Localizing-Bundle: org/usefultoys/rcp/platform/logger/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+
