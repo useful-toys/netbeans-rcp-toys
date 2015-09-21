@@ -54,17 +54,17 @@ public class CredentialPanel extends javax.swing.JPanel implements DialogConvent
 
         @Override
         public void insertUpdate(DocumentEvent e) {
-            dialogConvention.scheduleValidation();
+            dialogConvention.scheduleUpdate();
         }
 
         @Override
         public void removeUpdate(DocumentEvent e) {
-            dialogConvention.scheduleValidation();
+            dialogConvention.scheduleUpdate();
         }
 
         @Override
         public void changedUpdate(DocumentEvent e) {
-            dialogConvention.scheduleValidation();
+            dialogConvention.scheduleUpdate();
         }
     }
 

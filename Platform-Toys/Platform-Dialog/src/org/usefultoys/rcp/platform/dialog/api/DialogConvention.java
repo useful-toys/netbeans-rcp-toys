@@ -17,18 +17,19 @@ public interface DialogConvention<Inbound, Outbound> {
     }
 
     DialogState getDialogState();
-   
+
     Outbound createOutbound();
 
-    /** Inbound with default values. */
+    /**
+     * Inbound with default values.
+     */
     Inbound createInbound();
 
     void toFields(Inbound inbound);
 
     void fromFields(Outbound outbound);
 
-    void executeValidation();
-    
-    void scheduleValidation();
+    void scheduleUpdate();
 
+    void updateAll();
 }

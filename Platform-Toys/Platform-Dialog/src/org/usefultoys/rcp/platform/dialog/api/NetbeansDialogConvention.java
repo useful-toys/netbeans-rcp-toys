@@ -89,9 +89,11 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
     }
 
     public void show() {
-        dialogDescriptor.setOptions(new Object[] {DialogDescriptor.OK_OPTION});
+        dialogDescriptor.setOptions(new Object[]{DialogDescriptor.OK_OPTION});
         if (inbound != null) {
             dialogConvention.toFields(inbound);
+        } else {
+            dialogConvention.updateAll();
         }
         this.updateDialogDescriptorDefaultMessage();
         DialogDisplayer.getDefault().notify(dialogDescriptor);
@@ -115,9 +117,8 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
         if (inbound != null) {
             dialogConvention.toFields(inbound);
         } else {
-            dialogConvention.executeValidation();
+            dialogConvention.updateAll();
         }
-        this.updateDialogDescriptorValidity();
         this.updateDialogDescriptorDefaultMessage();
         this.dialogConvention.getDialogState().addPropertyChangeListener(new DialogConventionPropertyChangeListener());
         DialogDisplayer.getDefault().notify(dialogDescriptor);
@@ -170,7 +171,7 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
         if (inbound != null) {
             dialogConvention.toFields(inbound);
         } else {
-            dialogConvention.executeValidation();
+            dialogConvention.updateAll();
         }
         this.updateDialogDescriptorValidity();
         this.updateDialogDescriptorDefaultMessage();

@@ -74,17 +74,17 @@ public class UserPasswordPanel extends javax.swing.JPanel implements DialogConve
 
         @Override
         public void insertUpdate(DocumentEvent e) {
-            dialogConvention.scheduleValidation();
+            dialogConvention.scheduleUpdate();
         }
 
         @Override
         public void removeUpdate(DocumentEvent e) {
-            dialogConvention.scheduleValidation();
+            dialogConvention.scheduleUpdate();
         }
 
         @Override
         public void changedUpdate(DocumentEvent e) {
-            dialogConvention.scheduleValidation();
+            dialogConvention.scheduleUpdate();
         }
     }
 

@@ -26,12 +26,12 @@ public abstract class DialogConventionDefault<Inbound, Outbound>
     }
 
     @Override
-    public void scheduleValidation() {
+    public void scheduleUpdate() {
         if (changeCounter != 0) {
             return;
         }
         SwingUtilities.invokeLater(() -> {
-            executeValidation();
+            updateAll();
         });
 
     }
@@ -43,7 +43,7 @@ public abstract class DialogConventionDefault<Inbound, Outbound>
     public void stopChange() {
         changeCounter--;
         if (changeCounter == 0) {
-            executeValidation();
+            updateAll();
         }
     }
 
@@ -96,8 +96,7 @@ public abstract class DialogConventionDefault<Inbound, Outbound>
         return null;
     }
 
-    @Override
-    public final void executeValidation() {
+    protected final void updateValidation() {
         if (changeCounter != 0) {
             return;
         }
@@ -122,5 +121,30 @@ public abstract class DialogConventionDefault<Inbound, Outbound>
         } catch (IllegalStateException e) {
             getDialogState().changeToBlockingErrorState(e.getMessage());
         }
+    }
+
+    protected void updateEditable() {
+        /* Nothing by default. */
+    }
+
+    protected void updateVisible() {
+        /* Nothing by default. */
+    }
+
+    protected void updateEnabled() {
+        /* Nothing by default. */
+    }
+
+    protected void updateValues() {
+        /* Nothing by default. */
+    }
+
+    @Override
+    public void updateAll() {
+        updateValidation();
+        updateEditable();
+        updateVisible();
+        updateEnabled();
+        updateValues();
     }
 }
