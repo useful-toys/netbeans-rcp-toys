@@ -89,7 +89,7 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
     }
 
     public void show() {
-        dialogDescriptor.setOptionType(DialogDescriptor.DEFAULT_OPTION);
+        dialogDescriptor.setOptions(new Object[] {DialogDescriptor.OK_OPTION});
         if (inbound != null) {
             dialogConvention.toFields(inbound);
         }
