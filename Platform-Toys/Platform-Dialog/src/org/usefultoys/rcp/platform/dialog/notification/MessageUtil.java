@@ -1,5 +1,6 @@
 package org.usefultoys.rcp.platform.dialog.notification;
 
+import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 
@@ -29,12 +30,20 @@ public class MessageUtil {
         return DialogDisplayer.getDefault().notify(new NotifyDescriptor(mensagem, titulo, NotifyDescriptor.DEFAULT_OPTION, NotifyDescriptor.QUESTION_MESSAGE, opcoes, null));
     }
 
-    public static Object yesNoCancelQuestion(String titulo, String mensagem) {
-        return DialogDisplayer.getDefault().notify(new NotifyDescriptor(mensagem, titulo, NotifyDescriptor.YES_NO_CANCEL_OPTION, NotifyDescriptor.QUESTION_MESSAGE, null, null));
+    public static Boolean yesNoCancelQuestion(String titulo, String mensagem) {
+        final Object result = DialogDisplayer.getDefault().notify(new NotifyDescriptor(mensagem, titulo, NotifyDescriptor.YES_NO_CANCEL_OPTION, NotifyDescriptor.QUESTION_MESSAGE, null, null));
+        if (result == DialogDescriptor.CANCEL_OPTION) {
+            return null;
+        } else 
+        if (result == DialogDescriptor.YES_OPTION) {
+            return Boolean.TRUE;
+        } else {
+            return Boolean.FALSE;
+        }
     }
 
-    public static Object yesNoQuestion(String titulo, String mensagem) {
-        return DialogDisplayer.getDefault().notify(new NotifyDescriptor(mensagem, titulo, NotifyDescriptor.YES_NO_OPTION, NotifyDescriptor.QUESTION_MESSAGE, null, null));
+    public static boolean yesNoQuestion(String titulo, String mensagem) {
+        return DialogDisplayer.getDefault().notify(new NotifyDescriptor(mensagem, titulo, NotifyDescriptor.YES_NO_OPTION, NotifyDescriptor.QUESTION_MESSAGE, null, null)) == DialogDescriptor.YES_OPTION;
     }
 
     public static void plain(String titulo, String mensagem) {
