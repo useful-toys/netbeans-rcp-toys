@@ -16,8 +16,7 @@ import org.usefultoys.rcp.platform.dialog.core.DialogConventionDefault;
  * @author Daniel Felix Ferber
  */
 @NbBundle.Messages({
-    "UserPropertiesPanel_ChangeUserPasswordDialogTitle=Change user password",
-    "UserPropertiesPanel_DefaultMessage=User information"
+    "UserPropertiesPanel_Message_Default=User information"
 })
 public class UserPropertiesPanel extends javax.swing.JPanel implements DialogConvention.Support<UserPropertiesPanel.Inbound, UserPropertiesPanel.Outbound> {
 
@@ -33,7 +32,7 @@ public class UserPropertiesPanel extends javax.swing.JPanel implements DialogCon
         public boolean editableLogin;
         public boolean editableName;
         public boolean editablePassword;
-        public String defaultMessage = Bundle.UserPropertiesPanel_DefaultMessage();
+        public String defaultMessage = Bundle.UserPropertiesPanel_Message_Default();
     }
 
     public interface Validation {
