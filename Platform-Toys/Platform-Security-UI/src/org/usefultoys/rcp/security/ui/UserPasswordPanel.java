@@ -63,6 +63,7 @@ public class UserPasswordPanel extends javax.swing.JPanel implements DialogConve
         this.descriptor = descriptor;
         this.validation = validation;
         this.dialogConvention = new DialogConventionImpl(this, descriptor.defaultMessage);
+        initComponents();
         this.currentPasswordField.getDocument().addDocumentListener(dialogConvention.getDefaultDocumentListener());
         this.newPasswordField.getDocument().addDocumentListener(dialogConvention.getDefaultDocumentListener());
         this.repeatPasswordField.getDocument().addDocumentListener(dialogConvention.getDefaultDocumentListener());
