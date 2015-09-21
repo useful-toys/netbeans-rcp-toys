@@ -7,6 +7,8 @@ package org.usefultoys.rcp.platform.dialog.core;
 
 import java.awt.Component;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import org.usefultoys.rcp.platform.dialog.api.DialogConvention;
 import org.usefultoys.rcp.platform.dialog.api.DialogState;
 
@@ -146,5 +148,26 @@ public abstract class DialogConventionDefault<Inbound, Outbound>
         updateVisible();
         updateEnabled();
         updateValues();
+    }
+    private final DocumentListener fieldDocumentListener = new DocumentListener() {
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            scheduleUpdate();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            scheduleUpdate();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            scheduleUpdate();
+        }
+    };
+
+    public final DocumentListener getDefaultDocumentListener() {
+        return fieldDocumentListener;
     }
 }

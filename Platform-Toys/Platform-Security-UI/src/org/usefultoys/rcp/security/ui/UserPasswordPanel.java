@@ -61,31 +61,11 @@ public class UserPasswordPanel extends javax.swing.JPanel implements DialogConve
      */
     public UserPasswordPanel(Descriptor descriptor, Validation validation) {
         this.descriptor = descriptor;
-        final FieldDocumentListener fieldDocumentListener = new FieldDocumentListener();
-        initComponents();
-        this.currentPasswordField.getDocument().addDocumentListener(fieldDocumentListener);
-        this.newPasswordField.getDocument().addDocumentListener(fieldDocumentListener);
-        this.repeatPasswordField.getDocument().addDocumentListener(fieldDocumentListener);
         this.validation = validation;
         this.dialogConvention = new DialogConventionImpl(this, descriptor.defaultMessage);
-    }
-
-    private class FieldDocumentListener implements DocumentListener {
-
-        @Override
-        public void insertUpdate(DocumentEvent e) {
-            dialogConvention.scheduleUpdate();
-        }
-
-        @Override
-        public void removeUpdate(DocumentEvent e) {
-            dialogConvention.scheduleUpdate();
-        }
-
-        @Override
-        public void changedUpdate(DocumentEvent e) {
-            dialogConvention.scheduleUpdate();
-        }
+        this.currentPasswordField.getDocument().addDocumentListener(dialogConvention.getDefaultDocumentListener());
+        this.newPasswordField.getDocument().addDocumentListener(dialogConvention.getDefaultDocumentListener());
+        this.repeatPasswordField.getDocument().addDocumentListener(dialogConvention.getDefaultDocumentListener());
     }
 
     @Override

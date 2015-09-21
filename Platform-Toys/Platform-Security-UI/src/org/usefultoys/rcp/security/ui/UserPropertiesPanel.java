@@ -71,7 +71,6 @@ public class UserPropertiesPanel extends javax.swing.JPanel implements DialogCon
         this.descriptor = descriptor;
         initComponents();
         this.dialogConvention = new DialogConventionImpl(this, descriptor.defaultMessage);
-        updateFieldEditable();
     }
 
     private class DialogConventionImpl extends DialogConventionDefault<Inbound, Outbound> {
@@ -95,18 +94,22 @@ public class UserPropertiesPanel extends javax.swing.JPanel implements DialogCon
             loginField.setText(inbound.login);
             nameField.setText(inbound.name);
         }
+
+        @Override
+        protected void updateEditable() {
+            loginField.setEditable(descriptor.editableProperties && descriptor.editableLogin);
+            nameField.setEditable(descriptor.editableProperties && descriptor.editableName);
+        }
+
+        @Override
+        protected void updateEnabled() {
+            passwordButton.setEnabled(descriptor.editablePassword);
+        }
     }
 
     @Override
     public DialogConvention getDialogConvention() {
         return dialogConvention;
-    }
-
-    private void updateFieldEditable() {
-        boolean enabled = super.isEnabled();
-        this.passwordButton.setEnabled(descriptor.editablePassword && enabled);
-        this.loginField.setEditable(descriptor.editableProperties && descriptor.editableLogin && enabled);
-        this.nameField.setEditable(descriptor.editableProperties && descriptor.editableName && enabled);
     }
 
     /**
