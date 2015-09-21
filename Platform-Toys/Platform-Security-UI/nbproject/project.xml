@@ -3,11 +3,11 @@
     <type>org.netbeans.modules.apisupport.project</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
-            <code-name-base>br.com.danielferber.rcp.securitytoys.ui</code-name-base>
+            <code-name-base>org.usefultoys.rcp.security.ui</code-name-base>
             <suite-component/>
             <module-dependencies>
                 <dependency>
-                    <code-name-base>br.com.danielferber.rcp.securitytoys.api</code-name-base>
+                    <code-name-base>org.usefultoys.rcp.security</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
@@ -63,9 +63,17 @@
                         <specification-version>8.24.1</specification-version>
                     </run-dependency>
                 </dependency>
+                <dependency>
+                    <code-name-base>org.usefultoys.rcp.platform.dialog</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>1.0</specification-version>
+                    </run-dependency>
+                </dependency>
             </module-dependencies>
             <public-packages>
-                <package>br.com.danielferber.rcp.securitytoys.security.core</package>
+                <package>org.usefultoys.rcp.security.core</package>
             </public-packages>
         </data>
     </configuration>

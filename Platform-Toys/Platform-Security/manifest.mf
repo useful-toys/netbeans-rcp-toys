@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-OpenIDE-Module: br.com.danielferber.rcp.securitytoys.api
-OpenIDE-Module-Localizing-Bundle: br/com/danielferber/rcp/securitytoys/api/Bundle.properties
+OpenIDE-Module: org.usefultoys.rcp.security
+OpenIDE-Module-Localizing-Bundle: org/usefultoys/rcp/security/Bundle.properties
 OpenIDE-Module-Specification-Version: 1.0
 
