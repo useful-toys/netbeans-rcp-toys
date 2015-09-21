@@ -17,6 +17,7 @@ public abstract class DialogConventionDefault<Inbound, Outbound>
 
     private final DialogState dialogState;
     private int changeCounter = 0;
+    private boolean editable = false;
 
     public DialogConventionDefault(Component sourceBean, String defaultMessage) {
         dialogState = new DialogStateImpl(sourceBean, defaultMessage);
@@ -36,6 +37,15 @@ public abstract class DialogConventionDefault<Inbound, Outbound>
             updateAll();
         });
 
+    }
+
+    @Override
+    public final void setEditable(boolean editable) {
+        this.editable = editable;
+    }
+
+    protected final boolean isEditable() {
+        return editable;
     }
 
     public void startChange() {

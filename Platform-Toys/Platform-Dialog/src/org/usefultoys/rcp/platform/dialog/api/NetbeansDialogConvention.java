@@ -90,6 +90,7 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
 
     public void show() {
         dialogDescriptor.setOptions(new Object[]{DialogDescriptor.OK_OPTION});
+        dialogConvention.setEditable(false);
         if (inbound != null) {
             dialogConvention.toFields(inbound);
         } else {
@@ -114,6 +115,7 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
                 dialogDescriptor.setClosingOptions(null);
             }
         });
+        dialogConvention.setEditable(true);
         if (inbound != null) {
             dialogConvention.toFields(inbound);
         } else {
@@ -168,6 +170,7 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
             }
             dialogDescriptor.setClosingOptions(null);
         });
+        dialogConvention.setEditable(true);
         if (inbound != null) {
             dialogConvention.toFields(inbound);
         } else {

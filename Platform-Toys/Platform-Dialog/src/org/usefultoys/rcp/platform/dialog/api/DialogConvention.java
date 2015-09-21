@@ -11,6 +11,7 @@ package org.usefultoys.rcp.platform.dialog.api;
  */
 public interface DialogConvention<Inbound, Outbound> {
 
+
     interface Support<Inbound, Outbound> {
 
         DialogConvention<Inbound, Outbound> getDialogConvention();
@@ -32,4 +33,7 @@ public interface DialogConvention<Inbound, Outbound> {
     void scheduleUpdate();
 
     void updateAll();
+
+    void setEditable(boolean b);
+
 }
