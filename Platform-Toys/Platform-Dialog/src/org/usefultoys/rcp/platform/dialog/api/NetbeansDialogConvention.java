@@ -130,8 +130,6 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
     }
 
     private class EditAndProcessContext {
-
-        boolean preventClose;
         Object result = null;
         Exception exception = null;
     }
@@ -151,21 +149,26 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
                 }
                 context.exception = null;
                 context.result = null;
-                context.preventClose = false;
                 ProgressUtils.showProgressDialogAndRun(() -> {
                     try {
                         context.result = callable.call();
-                    } catch (PreventClose e) {
-                        context.preventClose = true;
                     } catch (Exception e) {
                         context.exception = e;
                     }
                 }, "Wait...");
-                if (context.preventClose || !dialogConvention.getDialogState().isOkAllowed()) {
+                if (context.exception instanceof PreventCloseWithError) {
+                    dialogConvention.getDialogState().changeToErrorState(context.exception.getMessage());
                     dialogDescriptor.setClosingOptions(new Object[]{});
-                    return;
+                } else if (context.exception instanceof PreventClose) {
+                    if (context.exception.getMessage() != null) {
+                        dialogConvention.getDialogState().changeToInfoState(context.exception.getMessage());
+                    }
+                    dialogDescriptor.setClosingOptions(new Object[]{});
+                } else if (! dialogConvention.getDialogState().isOkAllowed()) {
+                    dialogDescriptor.setClosingOptions(new Object[]{});
+                } else {
+                    dialogDescriptor.setClosingOptions(null);
                 }
-                dialogDescriptor.setClosingOptions(null);
                 return;
             }
             dialogDescriptor.setClosingOptions(null);
@@ -191,6 +194,13 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
         }
 
         public PreventClose(String message) {
+            super(message);
+        }
+    }
+
+    public static class PreventCloseWithError extends PreventClose {
+
+        public PreventCloseWithError(String message) {
             super(message);
         }
     }
