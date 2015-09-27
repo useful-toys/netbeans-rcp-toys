@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package org.usefultoys.platform.etable;
 
 import java.awt.Component;
@@ -18,8 +17,9 @@ import org.openide.util.actions.ActionPresenterProvider;
 import org.openide.util.actions.Presenter;
 
 /**
- * Popula um toolbar com actions gerenciadas pela API do Netbeans RCP.
- * Este código foi inspirado no código do próprio Netbeans RCP.
+ * Popula um toolbar com actions gerenciadas pela API do Netbeans RCP. Este
+ * código foi inspirado no código do próprio Netbeans RCP.
+ *
  * @author x8r7
  */
 public final class ToolbarBuilder {
@@ -43,10 +43,25 @@ public final class ToolbarBuilder {
                     // We need to correctly handle mnemonics with '&' etc.
                     item = ActionPresenterProvider.getDefault().createToolbarPresenter(action);
                 }
+                item.setFocusable(false);
                 toolbar.add(item);
             }
+            toolbar.setRollover(false);
+            toolbar.setFloatable(false);
+            toolbar.setFocusable(false);
+            toolbar.setFocusCycleRoot(false);
+            toolbar.setRequestFocusEnabled(false);
+            /* In order to induce the toolbar to a minimum size that accomodates all buttons:
+             * 1) Clear current size settings.
+             * 2) Set minimum and prefered size to getMinimumSize()
+             * Gotcha: if minimumSize is explicitly set to null, the getMinimumSize will calculate 
+             * the new minimum size based on the toolbars new context.
+             */
+            toolbar.setMaximumSize(null);
+            toolbar.setMinimumSize(null);
+            toolbar.setPreferredSize(null);
+            toolbar.setMinimumSize(toolbar.getMinimumSize());
+            toolbar.setPreferredSize(toolbar.getMinimumSize());
         }
-//        toolbar.setPreferredSize(toolbar.getPreferredSize());
-//        toolbar.validate();
     }
 }
