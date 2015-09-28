@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.usefultoys.platform.cookies.spi;
+package org.usefultoys.platform.cookies.ext;
 
 import org.usefultoys.platform.cookies.api.CookieService;
 import org.openide.util.ContextGlobalProvider;

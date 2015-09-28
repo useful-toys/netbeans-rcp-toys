@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.netbeans.swing.etable.ETable;
+import org.usefultoys.platform.cookies.api.CookieContext;
 
 /**
  *
@@ -20,10 +21,12 @@ import org.netbeans.swing.etable.ETable;
 public class TableSelectionSupport<RowType extends Object> {
 
     private final ETable table;
+    private final CookieContext context;
     private ListSelectionListener listSelectionListener;
 
-    public TableSelectionSupport(ETable table) {
+    public TableSelectionSupport(ETable table, CookieContext context) {
         this.table = table;
+        this.context = context;
     }
 
     public synchronized TableSelectionSupport ativar() {
@@ -45,10 +48,10 @@ public class TableSelectionSupport<RowType extends Object> {
     public void atualizar() {
         final Map<String, RowType> selection = calculateSelection();
         if (selection == null) {
-            CookieService.Lookup.getDefault().clearSelection();
+            context.clearSelection();
             return;
         }
-        CookieService.Lookup.getDefault().setSelectionObjects(selection);
+        context.setSelection(selection, null).apply();
     }
 
     private Map<String, RowType> calculateSelection() {

@@ -6,7 +6,9 @@
 package org.usefultoys.platform.cookies.api;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.openide.util.lookup.InstanceContent;
 
 /**
@@ -15,36 +17,54 @@ import org.openide.util.lookup.InstanceContent;
  */
 public interface CookieService {
 
+    /** @return Lookup exported globally to Netbeans RCP. */
     org.openide.util.Lookup getContext();
+    org.openide.util.Lookup getLocalContext();
 
-    void updateStatic();
+    CookieContext createCookieContext();
+    
+    CookieService update();
 
-    void setFocusObjects(Map<String, ? extends Object> focus);
-    void setFocusCookies(Collection<Object> cookies);
-    void setFocusCookies(Object ...cookies);
-    void addFocusCookies(Collection<Object> cookies);
-    void addFocusCookies(Object ...cookies);
-    void removeFocusCookies(Collection<Object> cookies);
-    void removeFocusCookies(Object ...cookies);
-    void clearFocus();
-
-    void setSelectionObjects(Map<String, ? extends Object> selection);
-    void setSelectionCookies(Collection<Object> cookies);
-    void setSelectionCookies(Object ...cookies);
-    void addSelectionCookies(Collection<Object> cookies);
-    void addSelectionCookies(Object ...cookies);
-    void removeSelectionCookies(Collection<Object> cookies);
-    void removeSelectionCookies(Object ...cookies);
-    void clearSelection();
-
-    void setLocalContent(InstanceContent content);
-    void clearLocalContent();
-
+    CookieService updateStatic();
+    
     public static class Lookup {
 
         public static CookieService getDefault() {
             return org.openide.util.Lookup.getDefault().lookup(CookieService.class);
         }
+    }
+
+    /**
+     * Callback that adds static cookies to the context. Static cookies are always
+     * available and do not depend on TopCompnent or selections.
+     *
+     * @author Daniel Felix Ferber
+     */
+    public static interface StaticCookieProvider {
+
+        boolean createStaticCookies(List<Object> cookiesRepository);
+    }
+
+    /**
+     * Callback that converts local objects as cookies added to the context. Local cookies
+     * represent the state of the active TopComponent.
+     *
+     * @author Daniel Felix Ferber
+     */
+    public static interface LocalCookieProvider {
+
+        boolean createLocalCookies(Map<String, ? extends Object> localMap, Set<Object> localSet, List<Object> cookiesRepository);
+    }
+
+    /**
+     * Callback that converts selection objects as cookies added to the context. Selection cookies
+     * represent the focus or selection of the current component of the active TopComponent.
+     *
+     * @author Daniel Felix Ferber
+     */
+    public static interface SelectionCookieProvider {
+
+        boolean createSelectionCookies(Map<String, ? extends Object> selectionMap, Set<Object> selectionSet, List<Object> cookiesRepository);
     }
 
 }
