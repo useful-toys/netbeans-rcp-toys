@@ -24,7 +24,7 @@ public class GlobalSelectionProvider implements ContextGlobalProvider {
     
     @Override
     public Lookup createGlobalContext() {
-        return CookieService.Lookup.getDefault().getContext();
+        return CookieService.Lookup.getDefault().getGlobalContext();
     }
 
 }

@@ -18,8 +18,8 @@ import org.openide.util.lookup.InstanceContent;
 public interface CookieService {
 
     /** @return Lookup exported globally to Netbeans RCP. */
-    org.openide.util.Lookup getContext();
-    org.openide.util.Lookup getLocalContext();
+//    org.openide.util.Lookup getContext();
+    org.openide.util.Lookup getGlobalContext();
 
     CookieContext createCookieContext();
     

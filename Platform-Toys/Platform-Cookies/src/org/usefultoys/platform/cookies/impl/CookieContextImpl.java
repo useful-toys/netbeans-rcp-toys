@@ -15,18 +15,24 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
+import javax.swing.Action;
+import javax.swing.JToolBar;
 import org.openide.util.Lookup;
+import org.openide.util.Utilities;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
+import org.openide.util.lookup.ProxyLookup;
 import org.usefultoys.platform.cookies.api.CookieService;
 import org.usefultoys.platform.cookies.api.CookieContext;
+import org.usefultoys.platform.cookies.api.ToolbarBuilder;
 
 public class CookieContextImpl implements CookieContext {
 
     private static final Logger logger = Logger.getLogger(CookieService.class.getName());
 
-    private final InstanceContent instanceContext = new InstanceContent();
-    private final Lookup lookup = new AbstractLookup(instanceContext);
+    private final InstanceContent localContent = new InstanceContent();
+    private final Lookup localLookup = new AbstractLookup(localContent);
+    private final Lookup actionsLocalLookup;
 
     private final Map<String, Object> localMap = new TreeMap<>();
     private final Set<Object> localSet = new HashSet<>();
@@ -39,6 +45,11 @@ public class CookieContextImpl implements CookieContext {
 
     public CookieContextImpl(CookieServiceImpl parent) {
         this.parent = parent;
+        this.actionsLocalLookup = new ProxyLookup(localLookup, parent.getStaticLookup());
+    }
+
+    Lookup getLocalLookup() {
+        return localLookup;
     }
 
     @Override
@@ -170,17 +181,12 @@ public class CookieContextImpl implements CookieContext {
         cookiesCreated |= cookies.addAll(cookieSet);
         if (cookiesCreated) {
             logger.info("Set " + cookies.size() + " context cookies");
-            instanceContext.set(cookies, null);
+            localContent.set(cookies, null);
         } else {
             logger.info("Set zero static cookies");
-            instanceContext.set(Collections.EMPTY_LIST, null);
+            localContent.set(Collections.EMPTY_LIST, null);
         }
         return this;
-    }
-
-    @Override
-    public Lookup getContext() {
-        return lookup;
     }
 
     @Override
@@ -193,5 +199,25 @@ public class CookieContextImpl implements CookieContext {
     public CookieContext deactivate() {
         parent.deactivate();
         return this;
+    }
+
+    @Override
+    public Lookup getActionsLocalContext() {
+        return actionsLocalLookup;
+    }
+
+    @Override
+    public void populateToolbar(JToolBar toolbar, List<? extends Action> actions) {
+        ToolbarBuilder.build(toolbar, actions, this.actionsLocalLookup);
+    }
+
+    @Override
+    public void populateToolbar(JToolBar toolbar, String actionsPath) {
+        ToolbarBuilder.build(toolbar, actionsPath, this.actionsLocalLookup);
+    }
+
+    @Override
+    public void update() {
+        this.apply();
     }
 }

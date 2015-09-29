@@ -34,49 +34,53 @@ public class CookieServiceImpl implements CookieService {
     private CookieContextImpl currentCookieContext = null;
 
     private final DynamicProxyLookup globalLookup = new DynamicProxyLookup(staticLookup);
-    private final org.openide.util.Lookup.Result<Object> globalLookupResult = globalLookup.lookupResult(Object.class);
+//    private final org.openide.util.Lookup.Result<Object> globalLookupResult = globalLookup.lookupResult(Object.class);
 
-    private InstanceContent exportedContent = new InstanceContent();
-    private final org.openide.util.Lookup exportedLookup = new AbstractLookup(exportedContent);
+//    private InstanceContent exportedContent = new InstanceContent();
+//    private final org.openide.util.Lookup exportedLookup = new AbstractLookup(exportedContent);
 
-    private InstanceContent localContent = new InstanceContent();
-    private final org.openide.util.Lookup localLookup = new AbstractLookup(localContent);
+//    private InstanceContent localContent = new InstanceContent();
+//    private final org.openide.util.Lookup localLookup = new AbstractLookup(localContent);
 
-    final LookupListener globalLookupListener = new LookupListener() {
-        @Override
-        public void resultChanged(LookupEvent ev) {
-            if (localContent != null) {
-                final Collection<? extends Object> allInstances = globalLookupResult.allInstances();
-                logger.info("Copy " + allInstances.size() + " objects");
-                localContent.set(allInstances, null);
-            }
-        }
-    };
+//    final LookupListener globalLookupListener = new LookupListener() {
+//        @Override
+//        public void resultChanged(LookupEvent ev) {
+//            if (localContent != null) {
+//                final Collection<? extends Object> allInstances = globalLookupResult.allInstances();
+//                logger.info("Copy " + allInstances.size() + " objects");
+//                localContent.set(allInstances, null);
+//            }
+//        }
+//    };
 
-    final LookupListener globalLookupListener2 = new LookupListener() {
-        @Override
-        public void resultChanged(LookupEvent ev) {
-            final Collection<? extends Object> allInstances = globalLookupResult.allInstances();
-            logger.info("Export " + allInstances.size() + " objects");
-            exportedContent.set(allInstances, null);
-        }
-    };
+//    final LookupListener globalLookupListener2 = new LookupListener() {
+//        @Override
+//        public void resultChanged(LookupEvent ev) {
+//            final Collection<? extends Object> allInstances = globalLookupResult.allInstances();
+//            logger.info("Export " + allInstances.size() + " objects");
+//            exportedContent.set(allInstances, null);
+//        }
+//    };
 
     public CookieServiceImpl() {
         super();
-        globalLookupResult.addLookupListener(globalLookupListener);
-        globalLookupResult.addLookupListener(globalLookupListener2);
+//        globalLookupResult.addLookupListener(globalLookupListener);
+//        globalLookupResult.addLookupListener(globalLookupListener2);
+    }
+
+    org.openide.util.Lookup getStaticLookup() {
+        return staticLookup;
     }
 
     @Override
-    public org.openide.util.Lookup getContext() {
-        return exportedLookup;
+    public org.openide.util.Lookup getGlobalContext() {
+        return globalLookup;
     }
 
-    @Override
-    public org.openide.util.Lookup getLocalContext() {
-        return localLookup;
-    }
+//    @Override
+//    public org.openide.util.Lookup getLocalContext() {
+//        return localLookup;
+//    }
 
     @Override
     public CookieContext createCookieContext() {
@@ -85,19 +89,20 @@ public class CookieServiceImpl implements CookieService {
 
     void activate(CookieContextImpl localCookieContext) {
         this.currentCookieContext = localCookieContext;
-        updateStaticCookies();
-        updateLocalContextCookies();
+        redirectLookups();
     }
 
     void deactivate() {
         this.currentCookieContext = null;
-        updateLocalContextCookies();
+        redirectLookups();
     }
 
     @Override
     public CookieService update() {
         updateStaticCookies();
-        updateLocalContextCookies();
+        if (this.currentCookieContext != null) {
+            this.currentCookieContext.update();
+        }
         return this;
     }
 
@@ -124,11 +129,11 @@ public class CookieServiceImpl implements CookieService {
         return this;
     }
 
-    void updateLocalContextCookies() {
+    void redirectLookups() {
         if (this.currentCookieContext == null) {
             globalLookup.setLookup(staticLookup);
         } else {
-            globalLookup.setLookup(staticLookup, this.currentCookieContext.getContext());   
+            globalLookup.setLookup(staticLookup, this.currentCookieContext.getLocalLookup());   
         }        
     }
 

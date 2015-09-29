@@ -24,13 +24,24 @@ import org.openide.util.actions.Presenter;
  * @author x8r7
  */
 public final class ToolbarBuilder {
+
+    public static void build(final JToolBar toolbar, final String actionsPath) {
+        List<? extends Action> actions = Utilities.actionsForPath(actionsPath);
+        build(toolbar, actions, Utilities.actionsGlobalContext());
+    }
+
     public static void build(final JToolBar toolbar, final List<? extends Action> actions) {
-        build(toolbar, actions, CookieService.Lookup.getDefault().getLocalContext());
+        build(toolbar, actions, Utilities.actionsGlobalContext());
+    }
+
+    public static void build(final JToolBar toolbar, final String actionsPath, final Lookup lookup) {
+        List<? extends Action> actions = Utilities.actionsForPath(actionsPath);
+        build(toolbar, actions, lookup);
     }
 
     public static void build(final JToolBar toolbar, final List<? extends Action> actions, final Lookup lookup) {
         for (Action action : actions) {
-            addAction(action, toolbar, lookup);
+            convertAndAddAction(action, toolbar, lookup);
         }
         toolbar.setRollover(false);
         toolbar.setFloatable(false);
@@ -50,13 +61,12 @@ public final class ToolbarBuilder {
         toolbar.setPreferredSize(toolbar.getMinimumSize());
     }
 
-    private static boolean addAction(Action action, final JToolBar toolbar, final Lookup lookup) {
+    private static boolean convertAndAddAction(Action action, final JToolBar toolbar, final Lookup lookup) {
         if (action == null) {
             toolbar.addSeparator();
         } else {
             if (lookup != null && action instanceof ContextAwareAction) {
-//                action = ((ContextAwareAction) action).createContextAwareInstance(lookup);
-//                action = Actions.context(null, true, true, null, null, null, null, true)
+                action = ((ContextAwareAction) action).createContextAwareInstance(lookup);
             }
             Component item;
             if (action instanceof Presenter.Toolbar) {

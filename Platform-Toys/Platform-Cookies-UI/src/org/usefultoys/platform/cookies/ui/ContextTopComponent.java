@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.usefultoys.platform.debug;
+package org.usefultoys.platform.cookies.ui;
 
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -11,14 +11,14 @@ import org.openide.awt.ActionReference;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.Utilities;
 import org.openide.windows.TopComponent;
-import org.usefultoys.platform.cookies.api.CookieService;
 
 /**
  * Top component which displays something.
  */
 @ConvertAsProperties(
-        dtd = "-//org.usefultoys.rcp.platform.debug//Context//EN",
+        dtd = "-//org.usefultoys.rcp.platform.cookies.ui//Context//EN",
         autostore = false
 )
 @TopComponent.Description(
@@ -27,7 +27,7 @@ import org.usefultoys.platform.cookies.api.CookieService;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "output", openAtStartup = false)
-@ActionID(category = "Window", id = "org.usefultoys.rcp.platform.debug.ContextTopComponent")
+@ActionID(category = "Window", id = "org.usefultoys.rcp.platform.cookies.ui.ContextTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_ContextAction",
@@ -41,7 +41,7 @@ import org.usefultoys.platform.cookies.api.CookieService;
 public final class ContextTopComponent extends TopComponent {
 
 //    private final org.openide.util.Lookup.Result<Object> globalLookupResult = Utilities.actionsGlobalContext().lookupResult(Object.class);
-    private final org.openide.util.Lookup.Result<Object> globalLookupResult = CookieService.Lookup.getDefault().getContext().lookupResult(Object.class);
+    private final org.openide.util.Lookup.Result<Object> globalLookupResult = Utilities.actionsGlobalContext().lookupResult(Object.class);
     private final LookupListener listener = new LookupListener() {
         @Override
         public void resultChanged(LookupEvent ev) {

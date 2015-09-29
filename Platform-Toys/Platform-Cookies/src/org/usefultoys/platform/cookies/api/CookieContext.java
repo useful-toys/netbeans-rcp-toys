@@ -9,6 +9,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.swing.Action;
+import javax.swing.JToolBar;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.InstanceContent;
 
@@ -17,7 +19,6 @@ import org.openide.util.lookup.InstanceContent;
  * @author Daniel Felix Ferber
  */
 public interface CookieContext {
-
 
     CookieContext addCookie(Object newObject);
 
@@ -37,8 +38,6 @@ public interface CookieContext {
 
     CookieContext clearLocalSet();
 
-    Lookup getContext();
-
     CookieContext removeCookie(Object object);
 
     CookieContext removeCookie(Object... cookies);
@@ -54,7 +53,16 @@ public interface CookieContext {
     CookieContext setSelection(Map<String, ? extends Object> newMap, Set<Object> newSet);
 
     CookieContext setLocalMap(Map<String, ? extends Object> newMap);
+
     CookieContext activate();
 
     CookieContext deactivate();
+
+    Lookup getActionsLocalContext();
+
+    void populateToolbar(JToolBar toolbar, List<? extends Action> actions);
+
+    void populateToolbar(JToolBar toolbar, String actionsPath);
+
+    void update();
 }
