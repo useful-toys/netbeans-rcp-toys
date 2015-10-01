@@ -167,11 +167,15 @@ public class CookieContextImpl implements CookieContext {
 
     @Override
     public CookieContext apply() {
+        Collection<? extends CookieService.LocalAndSelectionCookieProvider> localAndSelectionProviders = Lookup.getDefault().lookupAll(CookieService.LocalAndSelectionCookieProvider.class);
         Collection<? extends CookieService.SelectionCookieProvider> selectionProviders = Lookup.getDefault().lookupAll(CookieService.SelectionCookieProvider.class);
         Collection<? extends CookieService.LocalCookieProvider> localProviders = Lookup.getDefault().lookupAll(CookieService.LocalCookieProvider.class);
 
         List<Object> cookies = new ArrayList<>();
         boolean cookiesCreated = false;
+        for (CookieService.LocalAndSelectionCookieProvider provider : localAndSelectionProviders) {
+            cookiesCreated |= provider.createLocalAndSelectionCookies(localMap, localSet, selectionMap, selectionSet, cookies);
+        }
         for (CookieService.SelectionCookieProvider provider : selectionProviders) {
             cookiesCreated |= provider.createSelectionCookies(selectionMap, selectionSet, cookies);
         }

@@ -11,8 +11,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.ServiceProvider;
