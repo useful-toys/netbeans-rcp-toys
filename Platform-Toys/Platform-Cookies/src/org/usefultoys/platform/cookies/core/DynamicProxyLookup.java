@@ -10,7 +10,7 @@ import org.openide.util.lookup.ProxyLookup;
 
 /**
  *
- * @author a7hs
+ * @author Daniel Felix Ferber
  */
 public class DynamicProxyLookup extends ProxyLookup {
     public DynamicProxyLookup(Lookup... lookups) {

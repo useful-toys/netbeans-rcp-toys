@@ -5,10 +5,11 @@
  */
 package org.usefultoys.platform.cookies.ext;
 
-import org.usefultoys.platform.cookies.api.CookieService;
+import org.netbeans.modules.openide.windows.GlobalActionContextImpl;
 import org.openide.util.ContextGlobalProvider;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
+import org.usefultoys.platform.cookies.impl.LookupWrapper;
 
 /**
  *
@@ -17,14 +18,20 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = ContextGlobalProvider.class,
         supersedes = "org.netbeans.modules.openide.windows.GlobalActionContextImpl")
 public class GlobalSelectionProvider implements ContextGlobalProvider {
+    private LookupWrapper proxyLookup;
 
     public GlobalSelectionProvider() {
         super();
     }
-    
+
     @Override
     public Lookup createGlobalContext() {
-        return CookieService.Lookup.getDefault().getGlobalContext();
+        if (proxyLookup == null) {
+            GlobalActionContextImpl globalContextProvider = new GlobalActionContextImpl();
+            Lookup globalContextLookup = globalContextProvider.createGlobalContext();
+            proxyLookup = new LookupWrapper(globalContextLookup);
+        }
+        return proxyLookup;
     }
 
 }

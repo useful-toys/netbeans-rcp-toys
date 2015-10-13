@@ -18,21 +18,23 @@ import java.util.logging.Logger;
 import javax.swing.Action;
 import javax.swing.JToolBar;
 import org.openide.util.Lookup;
-import org.openide.util.Utilities;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.ProxyLookup;
 import org.usefultoys.platform.cookies.api.CookieService;
-import org.usefultoys.platform.cookies.api.CookieContext;
-import org.usefultoys.platform.cookies.api.ToolbarBuilder;
+import org.usefultoys.platform.cookies.api.TopComponentCookieContext;
+import org.usefultoys.platform.cookies.spi.LocalAndSelectionCookieProvider;
+import org.usefultoys.platform.cookies.spi.LocalCookieProvider;
+import org.usefultoys.platform.cookies.spi.SelectionCookieProvider;
+import org.usefultoys.platform.cookies.core.ToolbarBuilder;
 
-public class CookieContextImpl implements CookieContext {
+public class TopComponentCookieContextImpl implements TopComponentCookieContext {
 
     private static final Logger logger = Logger.getLogger(CookieService.class.getName());
 
     private final InstanceContent localContent = new InstanceContent();
     private final Lookup localLookup = new AbstractLookup(localContent);
-    private final Lookup actionsLocalLookup;
+    private final Lookup globalLookup;
 
     private final Map<String, Object> localMap = new TreeMap<>();
     private final Set<Object> localSet = new HashSet<>();
@@ -43,17 +45,23 @@ public class CookieContextImpl implements CookieContext {
 
     private final CookieServiceImpl parent;
 
-    public CookieContextImpl(CookieServiceImpl parent) {
+    public TopComponentCookieContextImpl(CookieServiceImpl parent) {
         this.parent = parent;
-        this.actionsLocalLookup = new ProxyLookup(localLookup, parent.getStaticLookup());
-    }
-
-    Lookup getLocalLookup() {
-        return localLookup;
+        this.globalLookup = new ProxyLookup(localLookup, parent.getStaticLookup());
     }
 
     @Override
-    public CookieContext setSelection(Map<String, ? extends Object> newMap, Set<Object> newSet) {
+    public Lookup getLookup() {
+        return globalLookup;
+    }
+
+    @Override
+    public Lookup getLocalLookup() {
+        return globalLookup;
+    }
+
+    @Override
+    public TopComponentCookieContext setSelection(Map<String, ? extends Object> newMap, Set<Object> newSet) {
         selectionMap.clear();
         if (newMap != null) {
             selectionMap.putAll(newMap);
@@ -66,7 +74,7 @@ public class CookieContextImpl implements CookieContext {
     }
 
     @Override
-    public CookieContext setLocalMap(Map<String, ? extends Object> newMap) {
+    public TopComponentCookieContext setLocalMap(Map<String, ? extends Object> newMap) {
         localMap.clear();
         if (newMap != null) {
             localMap.putAll(newMap);
@@ -75,7 +83,7 @@ public class CookieContextImpl implements CookieContext {
     }
 
     @Override
-    public CookieContext setLocalSet(Set<Object> newSet) {
+    public TopComponentCookieContext setLocalSet(Set<Object> newSet) {
         localSet.clear();
         if (newSet != null) {
             localSet.addAll(newSet);
@@ -84,7 +92,7 @@ public class CookieContextImpl implements CookieContext {
     }
 
     @Override
-    public CookieContext setCookieSet(Set<Object> newSet) {
+    public TopComponentCookieContext setCookieSet(Set<Object> newSet) {
         cookieSet.clear();
         if (newSet != null) {
             cookieSet.addAll(newSet);
@@ -93,131 +101,131 @@ public class CookieContextImpl implements CookieContext {
     }
 
     @Override
-    public CookieContext clearLocalMap() {
+    public TopComponentCookieContext clearLocalMap() {
         localMap.clear();
         return this;
     }
 
     @Override
-    public CookieContext clearSelection() {
+    public TopComponentCookieContext clearSelection() {
         selectionMap.clear();
         selectionSet.clear();
         return this;
     }
 
     @Override
-    public CookieContext clearLocalSet() {
+    public TopComponentCookieContext clearLocalSet() {
         localSet.clear();
         return this;
     }
 
     @Override
-    public CookieContext clearCookies() {
+    public TopComponentCookieContext clearCookies() {
         cookieSet.clear();
         return this;
     }
 
     @Override
-    public CookieContext addLocal(String ket, Object newObject) {
+    public TopComponentCookieContext addLocal(String ket, Object newObject) {
         localMap.put(ket, newObject);
         return this;
     }
 
     @Override
-    public CookieContext addLocal(Object newObject) {
+    public TopComponentCookieContext addLocal(Object newObject) {
         localSet.add(newObject);
         return this;
     }
 
     @Override
-    public CookieContext addCookie(Object newObject) {
+    public TopComponentCookieContext addCookie(Object newObject) {
         cookieSet.add(newObject);
         return this;
     }
 
     @Override
-    public CookieContext addCookie(Object... newCookies) {
+    public TopComponentCookieContext addCookie(Object... newCookies) {
         cookieSet.addAll(Arrays.asList(newCookies));
         return this;
     }
 
     @Override
-    public CookieContext removeLocal(String ket, Object object) {
+    public TopComponentCookieContext removeLocal(String ket, Object object) {
         localMap.remove(ket, object);
         return this;
     }
 
     @Override
-    public CookieContext removeLocal(Object object) {
+    public TopComponentCookieContext removeLocal(Object object) {
         localSet.remove(object);
         return this;
     }
 
     @Override
-    public CookieContext removeCookie(Object object) {
+    public TopComponentCookieContext removeCookie(Object object) {
         cookieSet.remove(object);
         return this;
     }
 
     @Override
-    public CookieContext removeCookie(Object... cookies) {
+    public TopComponentCookieContext removeCookie(Object... cookies) {
         cookieSet.remove(Arrays.asList(cookies));
         return this;
     }
 
     @Override
-    public CookieContext apply() {
-        Collection<? extends CookieService.LocalAndSelectionCookieProvider> localAndSelectionProviders = Lookup.getDefault().lookupAll(CookieService.LocalAndSelectionCookieProvider.class);
-        Collection<? extends CookieService.SelectionCookieProvider> selectionProviders = Lookup.getDefault().lookupAll(CookieService.SelectionCookieProvider.class);
-        Collection<? extends CookieService.LocalCookieProvider> localProviders = Lookup.getDefault().lookupAll(CookieService.LocalCookieProvider.class);
+    public TopComponentCookieContext apply() {
+        Collection<? extends LocalAndSelectionCookieProvider> localAndSelectionProviders = Lookup.getDefault().lookupAll(LocalAndSelectionCookieProvider.class);
+        Collection<? extends SelectionCookieProvider> selectionProviders = Lookup.getDefault().lookupAll(SelectionCookieProvider.class);
+        Collection<? extends LocalCookieProvider> localProviders = Lookup.getDefault().lookupAll(LocalCookieProvider.class);
 
         List<Object> cookies = new ArrayList<>();
         boolean cookiesCreated = false;
-        for (CookieService.LocalAndSelectionCookieProvider provider : localAndSelectionProviders) {
+        for (LocalAndSelectionCookieProvider provider : localAndSelectionProviders) {
             cookiesCreated |= provider.createLocalAndSelectionCookies(localMap, localSet, selectionMap, selectionSet, cookies);
         }
-        for (CookieService.SelectionCookieProvider provider : selectionProviders) {
+        for (SelectionCookieProvider provider : selectionProviders) {
             cookiesCreated |= provider.createSelectionCookies(selectionMap, selectionSet, cookies);
         }
-        for (CookieService.LocalCookieProvider provider : localProviders) {
+        for (LocalCookieProvider provider : localProviders) {
             cookiesCreated |= provider.createLocalCookies(localMap, localSet, cookies);
         }
         cookiesCreated |= cookies.addAll(cookieSet);
         if (cookiesCreated) {
-            logger.info("Set " + cookies.size() + " context cookies");
+            logger.info("Set " + cookies.size() + " local or selection cookies");
             localContent.set(cookies, null);
         } else {
-            logger.info("Set zero static cookies");
+            logger.info("Set zero local or selection cookies");
             localContent.set(Collections.EMPTY_LIST, null);
         }
         return this;
     }
 
-    @Override
-    public CookieContext activate() {
-        parent.activate(this);
-        return this;
-    }
-
-    @Override
-    public CookieContext deactivate() {
-        parent.deactivate();
-        return this;
-    }
+//    @Override
+//    public CookieContext activate() {
+//        parent.activate(this);
+//        return this;
+//    }
+//
+//    @Override
+//    public CookieContext deactivate() {
+//        parent.deactivate();
+//        return this;
+//    }
 
     @Override
     public Lookup getActionsLocalContext() {
-        return actionsLocalLookup;
+        return globalLookup;
     }
 
     @Override
     public void populateToolbar(JToolBar toolbar, List<? extends Action> actions) {
-        ToolbarBuilder.build(toolbar, actions, this.actionsLocalLookup);
+        ToolbarBuilder.build(toolbar, actions, this.globalLookup);
     }
 
     @Override
     public void populateToolbar(JToolBar toolbar, String actionsPath) {
-        ToolbarBuilder.build(toolbar, actionsPath, this.actionsLocalLookup);
+        ToolbarBuilder.build(toolbar, actionsPath, this.globalLookup);
     }
 
     @Override

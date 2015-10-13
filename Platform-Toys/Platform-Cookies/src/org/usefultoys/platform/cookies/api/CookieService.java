@@ -1,87 +1,47 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.usefultoys.platform.cookies.api;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.openide.util.lookup.InstanceContent;
 
 /**
+ * Service that creates and manages {@link TopComponentCookieContext}s.
  *
  * @author Daniel Felix Ferber
  */
 public interface CookieService {
 
+//    org.openide.util.Lookup getGlobalContext();
+
     /**
-     * @return Lookup exported globally to Netbeans RCP.
+     * Creates a new, empty {@link TopComponentCookieContext}.
+     *
+     * @return the {@link CookieService} itself.
      */
-//    org.openide.util.Lookup getContext();
-    org.openide.util.Lookup getGlobalContext();
+    TopComponentCookieContext createTopComponentCookieContext();
 
-    CookieContext createCookieContext();
+//    /**
+//     * Repopulates all cookies withint the context.
+//     *
+//     * @return the {@link CookieService} itself.
+//     */
+//    CookieService update();
 
-    CookieService update();
-
+    /**
+     * Repopulates only the static cookies withint the context.
+     *
+     * @return the {@link CookieService} itself.
+     */
     CookieService updateStatic();
 
-    public static class Lookup {
-
-        public static CookieService getDefault() {
-            return org.openide.util.Lookup.getDefault().lookup(CookieService.class);
-        }
-    }
-
     /**
-     * Callback that adds static cookies to the context. Static cookies are
-     * always available and do not depend on TopCompnent or selections.
-     *
-     * @author Daniel Felix Ferber
+     * @return the default {@link CookieService} instance.
      */
-    public static interface StaticCookieProvider {
-
-        boolean createStaticCookies(List<Object> cookiesRepository);
+    public static CookieService getDefault() {
+        return org.openide.util.Lookup.getDefault().lookup(CookieService.class);
     }
 
-    /**
-     * Callback that converts local objects as cookies added to the context.
-     * Local cookies represent the state of the active TopComponent.
-     *
-     * @author Daniel Felix Ferber
-     */
-    public static interface LocalCookieProvider {
 
-        boolean createLocalCookies(Map<String, ? extends Object> localMap, Set<Object> localSet, List<Object> cookiesRepository);
-    }
 
-    /**
-     * Callback that converts selection objects as cookies added to the context.
-     * Selection cookies represent the focus or selection of the current
-     * component of the active TopComponent.
-     *
-     * @author Daniel Felix Ferber
-     */
-    public static interface SelectionCookieProvider {
-
-        boolean createSelectionCookies(Map<String, ? extends Object> selectionMap, Set<Object> selectionSet, List<Object> cookiesRepository);
-    }
-
-    /**
-     * Callback that converts the combination of local and selection objects as
-     * cookies added to the context. Selection cookies represent the focus or
-     * selection of the current component of the active TopComponent. Local
-     * cookies represent the state of the active TopComponent.
-     *
-     * @author Daniel Felix Ferber
-     */
-    public static interface LocalAndSelectionCookieProvider {
-
-        boolean createLocalAndSelectionCookies(Map<String, ? extends Object> localMap, Set<Object> localSet,
-                Map<String, ? extends Object> selectionMap, Set<Object> selectionSet, List<Object> cookiesRepository);
-    }
 
 }

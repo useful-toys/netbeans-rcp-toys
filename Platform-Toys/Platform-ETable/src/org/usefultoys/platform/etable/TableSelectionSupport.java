@@ -5,13 +5,12 @@
  */
 package org.usefultoys.platform.etable;
 
-import org.usefultoys.platform.cookies.api.CookieService;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.netbeans.swing.etable.ETable;
-import org.usefultoys.platform.cookies.api.CookieContext;
+import org.usefultoys.platform.cookies.api.TopComponentCookieContext;
 
 /**
  *
@@ -21,10 +20,10 @@ import org.usefultoys.platform.cookies.api.CookieContext;
 public class TableSelectionSupport<RowType extends Object> {
 
     private final ETable table;
-    private final CookieContext context;
+    private final TopComponentCookieContext context;
     private ListSelectionListener listSelectionListener;
 
-    public TableSelectionSupport(ETable table, CookieContext context) {
+    public TableSelectionSupport(ETable table, TopComponentCookieContext context) {
         this.table = table;
         this.context = context;
     }
