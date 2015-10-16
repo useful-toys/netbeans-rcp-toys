@@ -14,9 +14,6 @@ import org.usefultoys.rcp.platform.dialog.api.NetbeansDialogConvention;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.netbeans.api.progress.ProgressUtils;
-import org.openide.DialogDescriptor;
-import org.openide.DialogDisplayer;
-import org.openide.NotifyDescriptor;
 import org.openide.util.NbBundle;
 
 @NbBundle.Messages({
@@ -78,13 +75,9 @@ public class AuthenticationProcessServiceDefault implements AuthenticationProces
             }
         });
         if (nbc.getOutbound().tries > MAXIMAL_NUMER_TRIES) {
-//            NotifyDescriptor d = new DialogDescriptor.Message(Bundle.AuthenticationProcessServiceDefault_Message_Exceeded(), DialogDescriptor.INFORMATION_MESSAGE);
-//            DialogDisplayer.getDefault().notify(d);
             throw new AuthenticationProcessException.Exceeded();
         }
         if (authenticatedUser == null) {
-//            NotifyDescriptor d = new DialogDescriptor.Message(Bundle.AuthenticationProcessServiceDefault_Message_Canceled(), DialogDescriptor.INFORMATION_MESSAGE);
-//            DialogDisplayer.getDefault().notify(d);
             throw new AuthenticationProcessException.Canceled();
         }
         return authenticatedUser;

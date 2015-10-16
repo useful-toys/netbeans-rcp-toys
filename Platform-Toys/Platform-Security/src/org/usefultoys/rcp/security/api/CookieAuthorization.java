@@ -14,10 +14,9 @@ import java.lang.annotation.Target;
  *
  * @author Daniel
  */
-@Retention(value = RetentionPolicy.SOURCE)
+@Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})
-public @interface ActionAuthorization {
-    public String value();
-    public String [] anyResource();
-    public String resource();
+public @interface CookieAuthorization {
+    public String resource() default "";
+    public String [] resources() default {};
 }

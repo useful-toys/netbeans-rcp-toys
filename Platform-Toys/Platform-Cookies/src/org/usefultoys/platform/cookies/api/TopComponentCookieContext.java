@@ -85,7 +85,7 @@ public interface TopComponentCookieContext {
 //
 //    CookieContext deactivate();
 
-    Lookup getActionsLocalContext();
+    Lookup actionsLocalContext();
 
     void populateToolbar(JToolBar toolbar, List<? extends Action> actions);
 

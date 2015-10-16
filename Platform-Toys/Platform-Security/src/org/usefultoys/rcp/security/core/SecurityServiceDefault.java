@@ -47,9 +47,9 @@ public class SecurityServiceDefault implements SecurityService {
         delegarLogoff();
 //        notificarUsuarioAutenticado(null);
     }
-
+ 
     @Override
-    public AuthenticatedUser login(final String chave, final char[] senha) throws AuthenticationException.IncorrectCredentials, AuthenticationException.UnavailableService, AuthenticationException.InactiveUser, AuthenticationException.InexistingUser {
+    public AuthenticatedUser login(final String chave, final char[] senha) throws AuthenticationException {
         if (currentAuthenticatedUser != null) {
             LOGGER.warn("Inconsistência no login. Já existia um usuário autenticado. usuario={}", currentAuthenticatedUser);
             currentAuthenticatedUser = null;
@@ -59,7 +59,7 @@ public class SecurityServiceDefault implements SecurityService {
         return currentAuthenticatedUser;
     }
 
-    protected void delegarLogin(final String chave, final char[] senha) throws AuthenticationException.IncorrectCredentials, AuthenticationException.InexistingUser, AuthenticationException.UnavailableService, AuthenticationException.InactiveUser {
+    protected void delegarLogin(final String chave, final char[] senha) throws AuthenticationException {
         /*
          * Realiza login.
          * Se o login falhar, então usuarioAutenticado=null.

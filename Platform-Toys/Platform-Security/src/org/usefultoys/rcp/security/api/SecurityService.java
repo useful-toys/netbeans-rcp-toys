@@ -78,7 +78,7 @@ public interface SecurityService {
      * @throws InactiveUser User is not active.
      * @throws InexistingUser User does not exist.
      */
-    AuthenticatedUser login(String login, char[] password) throws AuthenticationException.IncorrectCredentials, AuthenticationException.UnavailableService, AuthenticationException.InactiveUser, AuthenticationException.InexistingUser;
+    AuthenticatedUser login(String login, char[] password) throws AuthenticationException;
 
     /**
      * Nofify that the current user is not logged in anymore. Future calls to {@link #getCurrentAuthenticatedUser()

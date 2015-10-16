@@ -35,6 +35,7 @@ public class TopComponentCookieContextImpl implements TopComponentCookieContext 
     private final InstanceContent localContent = new InstanceContent();
     private final Lookup localLookup = new AbstractLookup(localContent);
     private final Lookup globalLookup;
+    private final Lookup actionsLocalContext;
 
     private final Map<String, Object> localMap = new TreeMap<>();
     private final Set<Object> localSet = new HashSet<>();
@@ -48,6 +49,7 @@ public class TopComponentCookieContextImpl implements TopComponentCookieContext 
     public TopComponentCookieContextImpl(CookieServiceImpl parent) {
         this.parent = parent;
         this.globalLookup = new ProxyLookup(localLookup, parent.getStaticLookup());
+        this.actionsLocalContext = new LookupWrapper(globalLookup);
     }
 
     @Override
@@ -201,21 +203,9 @@ public class TopComponentCookieContextImpl implements TopComponentCookieContext 
         return this;
     }
 
-//    @Override
-//    public CookieContext activate() {
-//        parent.activate(this);
-//        return this;
-//    }
-//
-//    @Override
-//    public CookieContext deactivate() {
-//        parent.deactivate();
-//        return this;
-//    }
-
     @Override
-    public Lookup getActionsLocalContext() {
-        return globalLookup;
+    public Lookup actionsLocalContext() {
+        return actionsLocalContext;
     }
 
     @Override

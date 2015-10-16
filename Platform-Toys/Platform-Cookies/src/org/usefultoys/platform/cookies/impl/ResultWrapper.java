@@ -6,7 +6,11 @@
 package org.usefultoys.platform.cookies.impl;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import org.openide.util.Lookup;
+import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 
 /**
@@ -17,6 +21,7 @@ public class ResultWrapper<T> extends Lookup.Result<T> {
 
     private final LookupWrapper lookupWrapper;
     private final Lookup.Result<T> wrappedResult;
+    private final Map<LookupListener, LookupListener> listenerMap = new WeakHashMap<>();
 
     public ResultWrapper(LookupWrapper lookupWrapper, Lookup.Result<T> wrappedResult) {
         this.lookupWrapper = lookupWrapper;
@@ -24,17 +29,31 @@ public class ResultWrapper<T> extends Lookup.Result<T> {
     }
 
     @Override
-    public void addLookupListener(LookupListener l) {
-        wrappedResult.addLookupListener(l);
+    public void addLookupListener(final LookupListener l) {
+        final LookupListener listenerWrapper = (LookupEvent ev) -> {
+            l.resultChanged(new LookupEvent(ResultWrapper.this));
+        };
+        listenerMap.put(l, listenerWrapper);
+        wrappedResult.addLookupListener(listenerWrapper);
     }
 
     @Override
     public void removeLookupListener(LookupListener l) {
-        wrappedResult.removeLookupListener(l);
+        wrappedResult.removeLookupListener(listenerMap.get(l));
     }
 
     @Override
     public Collection<? extends T> allInstances() {
-        return lookupWrapper.filter(wrappedResult.allInstances());
+        return lookupWrapper.filterInstance(wrappedResult.allInstances());
     }
+
+    @Override
+    public Set<Class<? extends T>> allClasses() {
+        return wrappedResult.allClasses();
+    }
+
+    @Override
+    public Collection<? extends Lookup.Item<T>> allItems() {
+        return lookupWrapper.filterItem(wrappedResult.allItems());
+    }    
 }

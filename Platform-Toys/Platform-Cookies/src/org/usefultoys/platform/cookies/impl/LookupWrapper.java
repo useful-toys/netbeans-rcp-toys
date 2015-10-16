@@ -33,22 +33,28 @@ public class LookupWrapper extends Lookup {
     @Override
     public <T> T lookup(Class<T> clazz) {
         final T candidate = wrappedLookup.lookup(clazz);
+        if (candidate == null) {
+            return null;
+        }
         if (ActionMap.class.equals(clazz)) {
             return candidate;
         }
-        return filter(candidate);
+        return filterInstance(candidate);
     }
 
     @Override
     public <T> Result<T> lookup(Template<T> template) {
         final Result<T> result = wrappedLookup.lookup(template);
+        if (result == null) {
+            return null;
+        }
         if (ActionMap.class.equals(template.getType())) {
             return result;
         }
         return new ResultWrapper<>(this, result);
     }
 
-    <T> T filter(final T candidate) {
+    <T> T filterInstance(final T candidate) {
         for (ContextFilter filter : registeredFilters) {
             FilterResult filterResult = filter.visit(candidate);
             if (filterResult == null) {
@@ -64,8 +70,34 @@ public class LookupWrapper extends Lookup {
         return candidate;
     }
 
-    <T> Collection<T> filter(final Collection<T> candidateCollection) {
-        Collection<T> resultCollection = candidateCollection instanceof List ? new ArrayList<>() : new HashSet<>();
+    <T, ItemType extends Item<T>> Collection<ItemType> filterItem(final Collection<ItemType> candidateCollection) {
+        final Collection<ItemType> resultCollection = candidateCollection instanceof List ? new ArrayList<>() : new HashSet<>();
+        nextCandidate:
+        for (ItemType candidate : candidateCollection) {
+            if (ActionMap.class.equals(candidate.getType())) {
+                resultCollection.add(candidate);
+                continue;
+            }
+            for (ContextFilter filter : registeredFilters) {
+                FilterResult filterResult = filter.visit(candidate.getInstance());
+                if (filterResult == null) {
+                    continue;
+                }
+                switch (filterResult) {
+                    case ACCEPT:
+                        resultCollection.add(candidate);
+                        continue nextCandidate;
+                    case REJECT:
+                        continue nextCandidate;
+                }
+            }
+            resultCollection.add(candidate);
+        }
+        return resultCollection;
+    }
+    
+    <T> Collection<T> filterInstance(final Collection<T> candidateCollection) {
+        final Collection<T> resultCollection = candidateCollection instanceof List ? new ArrayList<>() : new HashSet<>();
         nextCandidate:
         for (T candidate : candidateCollection) {
             if (ActionMap.class.equals(candidate.getClass())) {

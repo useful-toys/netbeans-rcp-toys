@@ -4,9 +4,9 @@ import org.openide.util.Lookup;
 
 public interface AuthenticationProcessService {
 
-    public abstract AuthenticatedUser executeAuthenticationQuery() throws AuthenticationProcessException;
+    AuthenticatedUser executeAuthenticationQuery() throws AuthenticationProcessException;
 
-    public abstract void executeLogoff();
+    void executeLogoff();
 
     static AuthenticationProcessService getDefault() {
         final AuthenticationProcessService instance = Lookup.getDefault().lookup(AuthenticationProcessService.class);
@@ -15,5 +15,4 @@ public interface AuthenticationProcessService {
         }
         return instance;
     }
-
 }

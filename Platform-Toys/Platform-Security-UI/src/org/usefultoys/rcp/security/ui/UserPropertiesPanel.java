@@ -5,6 +5,7 @@
  */
 package org.usefultoys.rcp.security.ui;
 
+import org.usefultoys.rcp.security.action.UserPasswordAction;
 import org.usefultoys.rcp.platform.dialog.api.DialogConvention;
 import org.usefultoys.rcp.security.api.AuthenticatedUser;
 import java.awt.Component;
@@ -28,7 +29,7 @@ public class UserPropertiesPanel extends javax.swing.JPanel implements DialogCon
      */
     public static class Descriptor {
 
-        boolean editableProperties;
+        public boolean editableProperties;
         public boolean editableLogin;
         public boolean editableName;
         public boolean editablePassword;

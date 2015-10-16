@@ -5,6 +5,7 @@
  */
 package org.usefultoys.rcp.security.ui;
 
+import org.usefultoys.rcp.security.action.UserPropertiesAction;
 import org.usefultoys.rcp.security.api.AuthenticatedUser;
 import org.usefultoys.rcp.security.api.SecurityService;
 import java.awt.event.MouseAdapter;

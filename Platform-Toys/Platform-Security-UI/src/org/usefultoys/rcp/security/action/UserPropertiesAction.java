@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.usefultoys.rcp.security.ui;
+package org.usefultoys.rcp.security.action;
 
 import org.usefultoys.rcp.platform.dialog.api.NetbeansDialogConvention;
 import org.usefultoys.rcp.security.api.AuthenticatedUser;
@@ -16,6 +16,7 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 import org.usefultoys.rcp.platform.dialog.notification.MessageUtil;
+import org.usefultoys.rcp.security.ui.UserPropertiesPanel;
 
 @ActionID(
         category = UserPropertiesAction.CATEGORY,
