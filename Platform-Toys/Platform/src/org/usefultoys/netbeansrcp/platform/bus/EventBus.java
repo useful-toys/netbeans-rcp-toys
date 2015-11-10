@@ -5,12 +5,20 @@
 package org.usefultoys.netbeansrcp.platform.bus;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 import org.openide.util.Exceptions;
@@ -36,16 +44,24 @@ import org.openide.util.lookup.Lookups;
  *
  * @author Daniel Felix Ferber
  */
-public class EventBus {
+public class EventBus implements Runnable {
 
     private static final Logger logger = Logger.getLogger(EventBus.class.getName());
 
-    private final EventQueue queue = new EventQueue();
-    private final ReentrantLock lock = new ReentrantLock();
-    private final String displayName;
+    private final String category;
+    private final String context;
 
-    private static final Map<Object, Map<String, EventBus>> EVENT_BUS_BY_CONTEXT_CATEGORY = new WeakHashMap<Object, Map<String, EventBus>>();
-    private static final Map<String, EventBus> EVENT_BUS_BY_CATEGORY = new HashMap<String, EventBus>();
+    private final ReentrantLock lockListener = new ReentrantLock();
+    private final Queue<Event<?>> edtEventQueue = new ConcurrentLinkedQueue<>();
+    private final Set<EventListener> globalListeners = new LinkedHashSet<>();
+    private final Set<EventListener> edtGlobalListeners = new LinkedHashSet<>();
+    private final Set<EventListener> localListeners = new LinkedHashSet<>();
+    private final Set<EventListener> edtLocalListeners = new LinkedHashSet<>();
+    private List<EventListener> edtGlobalListenersList;
+    private List<EventListener> edtLocalListenersList;
+
+    private static final Map<String, Map<String, EventBus>> EVENT_BUS_BY_CATEGORY_CONTEXT = new HashMap<>();
+    private static final Map<String, EventBus> EVENT_BUS_BY_CATEGORY = new HashMap<>();
     private static final EventBus EVENT_BUS = new EventBus(null, "default");
 
     public static synchronized EventBus getIntance() {
@@ -68,7 +84,7 @@ public class EventBus {
         return eventBus;
     }
 
-    public static synchronized EventBus getInstance(final Object context, final String category) {
+    public static synchronized EventBus getInstance(final String category, final String context) {
         if (context == null) {
             throw new IllegalArgumentException("context == null");
         }
@@ -76,83 +92,192 @@ public class EventBus {
             throw new IllegalArgumentException("category == null");
         }
 
-        Map<String, EventBus> eventBusByCategory = EVENT_BUS_BY_CONTEXT_CATEGORY.get(context);
+        Map<String, EventBus> eventBusByCategory = EVENT_BUS_BY_CATEGORY_CONTEXT.get(category);
         if (eventBusByCategory == null) {
-            EVENT_BUS_BY_CONTEXT_CATEGORY.put(context, eventBusByCategory = new HashMap<String, EventBus>());
+            EVENT_BUS_BY_CATEGORY_CONTEXT.put(category, eventBusByCategory = new HashMap<>());
         }
-        EventBus eventBus = eventBusByCategory.get(category);
+        EventBus eventBus = eventBusByCategory.get(context);
         if (eventBus == null) {
-            eventBusByCategory.put(category, eventBus = new EventBus(context, category));
-            logger.log(Level.FINE, "getInstance creates new EventBus. context={0}, category={1}", new Object[]{context, category});
+            eventBusByCategory.put(category, eventBus = new EventBus(category, context));
+            logger.log(Level.FINE, "getInstance creates new EventBus. category={0}, context={1}", new Object[]{category, context});
         } else {
-            logger.log(Level.FINE, "getInstance reuses existing EventBus. context={0}, category={1}", new Object[]{context, category});
+            logger.log(Level.FINE, "getInstance reuses existing EventBus. category={0}, context={1}", new Object[]{category, context});
         }
 
         return eventBus;
     }
 
-    EventBus(final Object context, final String category) {
+    EventBus(final String category, final String context) {
         /* Non visible constructor. */
 
-        this.displayName = category + (context == null ? "" : "/" + context.toString());
-        logger.log(Level.INFO, "Constructor. category={0}, name={1}", new Object[]{category, displayName});
+        logger.log(Level.INFO, "Constructor. category={0}, name={1}", new Object[]{category, context});
+        this.category = category;
+        this.context = context;
 
         if (category != null) {
             /* Popula os listeners registrados no layer.xml. */
-            final Lookup lookup = Lookups.forPath("EventBus/" + category);
-            final Collection<? extends EventListener> listeners = lookup.lookupAll(EventListener.class);
-            for (EventListener listener : listeners) {
+            final Lookup busLookup = Lookups.forPath("Bus/" + category);
+            final Collection<? extends EventListener> busListeners = busLookup.lookupAll(EventListener.class);
+            for (EventListener listener : busListeners) {
                 logger.log(Level.FINE, "New EventBus. Register global listener. listener={0}", listener);
-                queue.adicionarListener(listener);
+                globalListeners.add(listener);
+            }
+            final Lookup edtBusLookup = Lookups.forPath("EdtBus/" + category);
+            final Collection<? extends EventListener> edtBusListeners = edtBusLookup.lookupAll(EventListener.class);
+            for (EventListener listener : edtBusListeners) {
+                logger.log(Level.FINE, "New EventBus. Register global EDT listener. listener={0}", listener);
+                edtGlobalListeners.add(listener);
             }
         } else {
             logger.log(Level.FINE, "New EventBus. Null category implies no global listeners.");
         }
     }
 
+    public final String getDisplayName() {
+        return this.context + this.category;
+    }
+
     public final void register(final EventListener listener) {
-        logger.log(Level.FINE, "Register local listener. bus={0}, listener={1}", new Object[]{this, listener});
-        queue.adicionarListener(listener);
+        if (listener == null) {
+            throw new IllegalArgumentException("listener == null");
+        }
+
+        boolean added;
+        lockListener.lock();
+        try {
+            added = localListeners.add(listener);
+            if (added) {
+                localListenersList = null;
+            }
+        } finally {
+            lockListener.unlock();
+        }
+
+        if (added) {
+            logger.log(Level.FINE, "Register local listener. bus={0}, listener={1}", new Object[]{this.getDisplayName(), listener});
+        } else {
+            logger.log(Level.WARNING, "Register local listener: already registered! bus={0}, listener={1}", new Object[]{this.getDisplayName(), listener});
+        }
+    }
+
+    public final void edtRegister(final EventListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("listener == null");
+        }
+
+        boolean added;
+        lockListener.lock();
+        try {
+            added = edtLocalListeners.add(listener);
+            if (added) {
+                edtLocalListenersList = null;
+            }
+        } finally {
+            lockListener.unlock();
+        }
+
+        if (added) {
+            logger.log(Level.FINE, "Register local listener. bus={0}, listener={1}", new Object[]{this.getDisplayName(), listener});
+        } else {
+            logger.log(Level.WARNING, "Register local listener: already registered! bus={0}, listener={1}", new Object[]{this.getDisplayName(), listener});
+        }
     }
 
     public final void unregister(final EventListener listener) {
-        logger.log(Level.FINE, "Unregister local listener. bus={0}, listener={1}", new Object[]{this, listener});
-        queue.removerListener(listener);
+        if (listener == null) {
+            throw new IllegalArgumentException("listener == null");
+        }
+
+        boolean removed;
+        lockListener.lock();
+        try {
+            removed = localListeners.remove(listener) || edtLocalListeners.remove(listener);
+            if (removed) {
+                localListenersList = null;
+                edtLocalListenersList = null;
+            }
+        } finally {
+            lockListener.unlock();
+        }
+
+        if (removed) {
+            logger.log(Level.FINE, "Unregister local listener. bus={0}, listener={1}", new Object[]{this.getDisplayName(), listener});
+        } else {
+            logger.log(Level.WARNING, "Unregister local listener: not yet registered! bus={0}, listener={1}", new Object[]{this.getDisplayName(), listener});
+        }
     }
 
+    @Deprecated
     public final void disparar(final Event<?> event) {
-        logger.log(Level.FINE, "Dispatch event. bus={0}, event={1}", new Object[]{this, event});
+        dispatch(event);
+    }
 
-        queue.adicionarMensagem(event);
+    public final void dispatch(final Event<?> event) {
+        logger.log(Level.FINE, "Dispatch event. bus={0}, event={1}", new Object[]{this.getDisplayName(), event});
 
-        if (lock.tryLock()) {
-            final int holdCount = lock.getHoldCount();
-            if (holdCount > 1) {
-                /* já está executando. */
-                lock.unlock();
-                return;
-            }
-            try {
-                if (!SwingUtilities.isEventDispatchThread()) {
-                    try {
-                        SwingUtilities.invokeAndWait(queue);
-                    } catch (InterruptedException ex) {
-                        Exceptions.printStackTrace(ex);
-                    } catch (InvocationTargetException ex) {
-                        Exceptions.printStackTrace(ex);
-                    }
-                } else {
-                    queue.run();
+        callListeners(globalListeners, event);
+        callListeners(localListeners, event);
+        edtEventQueue.add(event);
+        if (!edtEventQueue.isEmpty()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    /* */
+                    callAllListeners(edtGlobalListenersList, event);
+                    callAllListeners(edtLocalListeners, event);
                 }
-            } finally {
-                lock.unlock();
+            });
+        }
+    }
+
+//    public final void executeOnEventDispatchThread() {
+//        if (! lock.tryLock()) {
+//            lock.
+//            return;
+//        } el
+//                    
+//            final int holdCount = lock.getHoldCount();
+//            if (holdCount > 1) {
+//                /* já está executando. */
+//                lock.unlock();
+//                return;
+//            }
+//            try {
+//                if (!SwingUtilities.isEventDispatchThread()) {
+//                    try {
+//                        SwingUtilities.invokeAndWait(queue);
+//                    } catch (Exception | Error ex) {
+//                        logger.log(Level.SEVERE, "Failed to execNew EventBus. Null category implies no global listeners.");
+//                    } catch (InvocationTargetException ex) {
+//                        Exceptions.printStackTrace(ex);
+//                    }
+//                } else {
+//                    queue.run();
+//                }
+//            } finally {
+//                lock.unlock();
+//            }
+//        }
+//    }
+    protected final void callListeners(Collection<EventListener> listenersCollection, final Event<?> event) {
+        for (EventListener listener : listenersCollection) {
+            try {
+                if (event.isCompatible(listener)) {
+                    logger.log(Level.FINE, "Event listener. listener={0}, event={1}", new Object[]{listener, event});
+                    event.executarCaller(listener);
+                }
+            } catch (Exception | Error e) {
+                LogRecord record = new LogRecord(Level.SEVERE, "Event listener failed. listener={0}, event={1}");
+                record.setParameters(new Object[]{listener, event});
+                record.setThrown(e);
+                logger.log(record);
             }
         }
     }
 
     @Override
     public String toString() {
-        return displayName;
+        return "EventBus{" + this.getDisplayName() + '}';
     }
 
 }

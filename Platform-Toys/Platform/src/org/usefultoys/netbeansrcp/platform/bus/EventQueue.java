@@ -22,8 +22,6 @@ import org.openide.util.Lookup;
 class EventQueue implements Runnable {
 
     private static final Logger logger = Logger.getLogger(EventQueue.class.getName());
-    private final Queue<Event<?>> mensagens = new ConcurrentLinkedQueue<Event<?>>();
-    private final List<EventListener> localListeners = new ArrayList<EventListener>();
 
     EventQueue() {
         /* Proibe instâncias fora do package. */
