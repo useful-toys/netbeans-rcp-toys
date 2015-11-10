@@ -21,7 +21,6 @@ public class CookieAuthorizationContextFilter implements ContextFilter {
     @Override
     public <T> FilterResult visit(T object) {
         CookieAuthorization annotation = object.getClass().getAnnotation(CookieAuthorization.class);
-        System.out.println("Test "+object);
         if (annotation == null) {
             return FilterResult.CONTINUE;
         }

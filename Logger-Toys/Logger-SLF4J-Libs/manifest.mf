@@ -1,5 +1,0 @@
-Manifest-Version: 1.0
-OpenIDE-Module: org.usefultoys.rcp.logger.slf4jlibs
-OpenIDE-Module-Localizing-Bundle: org/usefultoys/rcp/logger/slf4jlibs/Bundle.properties
-OpenIDE-Module-Specification-Version: 1.0
-
