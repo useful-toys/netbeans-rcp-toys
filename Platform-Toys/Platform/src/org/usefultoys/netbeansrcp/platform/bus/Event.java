@@ -1,4 +1,4 @@
-package org.usefultoys.platform.bus.api;
+package org.usefultoys.netbeansrcp.platform.bus;
 
 /**
  * Event sent through the event bus. Events are delivered only to Listeners that

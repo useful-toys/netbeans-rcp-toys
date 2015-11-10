@@ -1,8 +1,6 @@
 package org.usefultoys.rcp.security.api;
 
-import org.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 import org.usefultoys.rcp.security.spi.AuthenticationListener;
 import org.usefultoys.rcp.security.api.AuthenticationException.InactiveUser;
 import org.usefultoys.rcp.security.api.AuthenticationException.IncorrectCredentials;
@@ -37,7 +35,7 @@ import org.usefultoys.rcp.security.api.AuthenticationException.UnavailableServic
  */
 public interface SecurityService {
 
-    public static final Logger LOGGER = LoggerFactory.getLogger(SecurityService.class);
+    public static final Logger LOGGER = Logger.getLogger(SecurityService.class.getName());
 
     /**
      * If the underlying service implementation is available.

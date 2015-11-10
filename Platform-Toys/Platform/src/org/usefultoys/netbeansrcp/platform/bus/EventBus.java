@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.usefultoys.platform.bus.api;
+package org.usefultoys.netbeansrcp.platform.bus;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
@@ -10,12 +10,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.Lookups;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Mecanismo de comunicação entre módulos. Não requer que os módulos conheçam um
@@ -38,15 +38,18 @@ import org.slf4j.LoggerFactory;
  */
 public class EventBus {
 
-    private static final Logger logger = LoggerFactory.getLogger(EventBus.class);
-    private final EventQueue fila = new EventQueue();
-    private final ReentrantLock semaforo = new ReentrantLock();
+    private static final Logger logger = Logger.getLogger(EventBus.class.getName());
+
+    private final EventQueue queue = new EventQueue();
+    private final ReentrantLock lock = new ReentrantLock();
+    private final String displayName;
 
     private static final Map<Object, Map<String, EventBus>> EVENT_BUS_BY_CONTEXT_CATEGORY = new WeakHashMap<Object, Map<String, EventBus>>();
     private static final Map<String, EventBus> EVENT_BUS_BY_CATEGORY = new HashMap<String, EventBus>();
-    private static final EventBus EVENT_BUS = new EventBus("");
+    private static final EventBus EVENT_BUS = new EventBus(null, "default");
 
     public static synchronized EventBus getIntance() {
+        logger.log(Level.FINE, "getInstance on default EventBus.");
         return EVENT_BUS;
     }
 
@@ -57,15 +60,15 @@ public class EventBus {
 
         EventBus eventBus = EVENT_BUS_BY_CATEGORY.get(category);
         if (eventBus == null) {
-            EVENT_BUS_BY_CATEGORY.put(category, eventBus = new EventBus(category));
-            logger.debug("Create EventBus. category={}", category);
+            EVENT_BUS_BY_CATEGORY.put(category, eventBus = new EventBus(null, category));
+            logger.log(Level.FINE, "getInstance creates new Create EventBus. category={0}", category);
         } else {
-            logger.debug("Reuse EventBus. category={}", category);
+            logger.log(Level.FINE, "getInstance reuses existing EventBus. category={0}", category);
         }
         return eventBus;
     }
 
-    public static synchronized EventBus getInstance(final Object context, String category) {
+    public static synchronized EventBus getInstance(final Object context, final String category) {
         if (context == null) {
             throw new IllegalArgumentException("context == null");
         }
@@ -79,74 +82,77 @@ public class EventBus {
         }
         EventBus eventBus = eventBusByCategory.get(category);
         if (eventBus == null) {
-            eventBusByCategory.put(category, eventBus = new EventBus(category));
-            logger.debug("Create EventBus. context={}, category={}", context, category);
+            eventBusByCategory.put(category, eventBus = new EventBus(context, category));
+            logger.log(Level.FINE, "getInstance creates new EventBus. context={0}, category={1}", new Object[]{context, category});
         } else {
-            logger.debug("Reuse EventBus. context={}, category={}", context, category);
+            logger.log(Level.FINE, "getInstance reuses existing EventBus. context={0}, category={1}", new Object[]{context, category});
         }
 
         return eventBus;
     }
 
-    EventBus(final String classificador) {
-        /* Proibe instâncias fora do package. */
+    EventBus(final Object context, final String category) {
+        /* Non visible constructor. */
 
-        logger.info("Criar barramento. classificador={}", classificador);
+        this.displayName = category + (context == null ? "" : "/" + context.toString());
+        logger.log(Level.INFO, "Constructor. category={0}, name={1}", new Object[]{category, displayName});
 
-        /* Popula os listeners registrados no layer.xml. */
-        if (classificador != null) {
-            final Lookup lookup = Lookups.forPath("Barramento/" + classificador);
+        if (category != null) {
+            /* Popula os listeners registrados no layer.xml. */
+            final Lookup lookup = Lookups.forPath("EventBus/" + category);
             final Collection<? extends EventListener> listeners = lookup.lookupAll(EventListener.class);
-            logger.debug("Classificador informado. Registrar listeners globais. #listeners={}", listeners.size());
             for (EventListener listener : listeners) {
-                logger.debug("Registrar listener global. listener={}", listener);
-                fila.adicionarListener(listener);
+                logger.log(Level.FINE, "New EventBus. Register global listener. listener={0}", listener);
+                queue.adicionarListener(listener);
             }
-
-            /* TODO: precisa registrar um listener no layer.xml para capturar novos listeners de módulos
-             * adicionados após a criação do barramento. */
         } else {
-            logger.debug("Classificador não informado. Não haverá listeners globais.");
+            logger.log(Level.FINE, "New EventBus. Null category implies no global listeners.");
         }
     }
 
     public final void register(final EventListener listener) {
-        logger.debug("Registrar listener. barramento={}, listener={}", this, listener);
-        fila.adicionarListener(listener);
+        logger.log(Level.FINE, "Register local listener. bus={0}, listener={1}", new Object[]{this, listener});
+        queue.adicionarListener(listener);
     }
 
     public final void unregister(final EventListener listener) {
-        logger.debug("Desregistrar listener. barramento={}, listener={}", this, listener);
-        fila.removerListener(listener);
+        logger.log(Level.FINE, "Unregister local listener. bus={0}, listener={1}", new Object[]{this, listener});
+        queue.removerListener(listener);
     }
 
-    public final void disparar(final Event<?> mensagem) {
-        logger.debug("Disparar mensagem. barramento={}, mensagem={}", this, mensagem);
+    public final void disparar(final Event<?> event) {
+        logger.log(Level.FINE, "Dispatch event. bus={0}, event={1}", new Object[]{this, event});
 
-        fila.adicionarMensagem(mensagem);
+        queue.adicionarMensagem(event);
 
-        if (semaforo.tryLock()) {
-            final int holdCount = semaforo.getHoldCount();
+        if (lock.tryLock()) {
+            final int holdCount = lock.getHoldCount();
             if (holdCount > 1) {
                 /* já está executando. */
-                semaforo.unlock();
+                lock.unlock();
                 return;
             }
             try {
                 if (!SwingUtilities.isEventDispatchThread()) {
                     try {
-                        SwingUtilities.invokeAndWait(fila);
+                        SwingUtilities.invokeAndWait(queue);
                     } catch (InterruptedException ex) {
                         Exceptions.printStackTrace(ex);
                     } catch (InvocationTargetException ex) {
                         Exceptions.printStackTrace(ex);
                     }
                 } else {
-                    fila.run();
+                    queue.run();
                 }
             } finally {
-                semaforo.unlock();
+                lock.unlock();
             }
         }
     }
+
+    @Override
+    public String toString() {
+        return displayName;
+    }
+
 }

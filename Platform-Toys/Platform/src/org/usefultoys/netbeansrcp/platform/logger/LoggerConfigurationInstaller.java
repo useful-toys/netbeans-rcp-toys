@@ -1,6 +1,6 @@
 /*
  */
-package org.usefultoys.rcp.platform.logger;
+package org.usefultoys.netbeansrcp.platform.logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +16,7 @@ import org.openide.filesystems.FileUtil;
 import org.openide.modules.OnStart;
 
 @OnStart
-public final class Installer implements Runnable {
+public final class LoggerConfigurationInstaller implements Runnable {
 
     static final String PROPERTIES_FILE_NAME = "logger.properties";
     static final String FILE_OBJECT_NAME = "Logger";
@@ -125,7 +125,7 @@ public final class Installer implements Runnable {
     }
 
     private static String getExampleLoggerName() {
-        return Installer.class.getPackage().getName() + ".example";
+        return LoggerConfigurationInstaller.class.getPackage().getName() + ".example";
     }
 
     static void readUserConfigurationPropertiesFile() {

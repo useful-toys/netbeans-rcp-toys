@@ -1,6 +1,6 @@
 /*
  */
-package org.usefultoys.platform.bus.api;
+package org.usefultoys.netbeansrcp.platform.bus;
 
 /**
  *

@@ -10,6 +10,9 @@ import static org.usefultoys.rcp.security.api.SecurityService.LOGGER;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import org.openide.util.Exceptions;
 
 /**
  *
@@ -40,18 +43,18 @@ public class SecurityServiceDefault implements SecurityService {
     @Override
     public void logoff() {
         if (currentAuthenticatedUser == null) {
-            LOGGER.warn("Inconsistência no logoff. Não existe um usuário autenticado.");
+            LOGGER.log(Level.WARNING, "Inconsistência no logoff. Não existe um usuário autenticado.");
             return;
         }
 
         delegarLogoff();
 //        notificarUsuarioAutenticado(null);
     }
- 
+
     @Override
     public AuthenticatedUser login(final String chave, final char[] senha) throws AuthenticationException {
         if (currentAuthenticatedUser != null) {
-            LOGGER.warn("Inconsistência no login. Já existia um usuário autenticado. usuario={}", currentAuthenticatedUser);
+            LOGGER.log(Level.WARNING, "Inconsistência no login. Já existia um usuário autenticado. usuario={0}", currentAuthenticatedUser);
             currentAuthenticatedUser = null;
         }
         delegarLogin(chave, senha);
@@ -68,26 +71,26 @@ public class SecurityServiceDefault implements SecurityService {
         try {
             this.currentAuthenticatedUser = lookupAuthenticationIntegration().login(chave, senha);
             lastLoginException = null;
-            LOGGER.info("Login com sucesso. usuario={}", currentAuthenticatedUser);
+            LOGGER.log(Level.INFO, "Login com sucesso. usuario={}", currentAuthenticatedUser);
         } catch (final AuthenticationException.IncorrectCredentials e) {
-            LOGGER.info("Login recusado. Credenciais incorretas. chave={}", chave, e);
+            LOGGER.log(Level.INFO, "Login recusado. Credenciais incorretas. chave={0}", chave);
             lastLoginException = e;
             throw e;
         } catch (final AuthenticationException.InexistingUser e) {
-            LOGGER.info("Login recusado. Usuário inexistente. chave={}", chave, e);
+            LOGGER.log(Level.INFO, "Login recusado. Usuário inexistente. chave={0}", chave);
             lastLoginException = e;
             throw e;
         } catch (final AuthenticationException.UnavailableService e) {
-            LOGGER.info("Login recusado. Serviço indisponível. chave={}", chave, e);
+            LOGGER.log(Level.INFO, "Login recusado. Serviço indisponível. chave={0}", chave);
             lastLoginException = e;
             throw e;
         } catch (final AuthenticationException.InactiveUser e) {
-            LOGGER.info("Login recusado. Usuário inativo. chave={}", chave, e);
+            LOGGER.log(Level.INFO, "Login recusado. Usuário inativo. chave={0}", chave);
             lastLoginException = e;
             throw e;
         } catch (final RuntimeException e) {
             lastLoginException = e;
-            LOGGER.error("Falha no login. chave={}; mensagem={}", chave, e.getMessage());
+            LOGGER.log(Level.SEVERE, "Falha no login. chave={}; mensagem={}", new Object[]{chave, e.getMessage()});
             throw e;
         }
     }
@@ -95,9 +98,12 @@ public class SecurityServiceDefault implements SecurityService {
     protected void delegarLogoff() {
         try {
             lookupAuthenticationIntegration().logoff();
-            LOGGER.info("Logoff com sucesso. usuario={}", currentAuthenticatedUser);
+            LOGGER.log(Level.INFO, "Logoff com sucesso. usuario={}", currentAuthenticatedUser);
         } catch (final RuntimeException e) {
-            LOGGER.error("Falha no logoff. usuario={}", currentAuthenticatedUser, e);
+            LogRecord record = new LogRecord(Level.SEVERE, "Falha no logoff. usuario={}");
+            record.setParameters(new Object[]{currentAuthenticatedUser});
+            record.setThrown(e);
+            LOGGER.log(record);
         } finally {
             currentAuthenticatedUser = null;
         }
@@ -119,17 +125,17 @@ public class SecurityServiceDefault implements SecurityService {
         for (final AuthenticationListener listener : lookupSegurancaListeners()) {
             try {
                 listener.notifyAuthenticatedUser(usuario);
-                LOGGER.info("Sucesso em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", usuario, listener);
+                LOGGER.log(Level.INFO, "Sucesso em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", new Object[]{usuario, listener});
             } catch (final RuntimeException e) {
-                LOGGER.error("Falha em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", usuario, listener);
+                LOGGER.log(Level.SEVERE, "Falha em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", new Object[]{usuario, listener});
             }
         }
         for (final AuthenticationListener listener : listeners) {
             try {
                 listener.notifyAuthenticatedUser(usuario);
-                LOGGER.info("Sucesso em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", usuario, listener);
+                LOGGER.log(Level.INFO, "Sucesso em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", new Object[]{usuario, listener});
             } catch (final RuntimeException e) {
-                LOGGER.error("Falha em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", usuario, listener);
+                LOGGER.log(Level.SEVERE, "Falha em SegurancaListener.usuarioAutenticado(). usuario={}, class={}", new Object[]{usuario, listener});
             }
         }
     }

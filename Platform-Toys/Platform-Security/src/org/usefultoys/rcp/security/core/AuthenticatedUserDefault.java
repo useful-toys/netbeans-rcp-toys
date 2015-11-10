@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
 
 /**
  * A default implementation for {@link AuthenticatedUser}.
@@ -44,9 +45,9 @@ public class AuthenticatedUserDefault implements AuthenticatedUser {
     protected boolean checkAndLogAny(Collection<String> resourceNames) {
         final boolean granted = !Collections.disjoint(resources, resourceNames);
         if (granted) {
-            SecurityService.LOGGER.debug("Resource granted. login={}; query={}", getLogin(), resourceNames);
+            SecurityService.LOGGER.log(Level.FINE, "Resource granted. login={0}; query={1}", new Object[] {getLogin(), resourceNames});
         } else {
-            SecurityService.LOGGER.debug("Resource denied. login={}; query={}", getLogin(), resourceNames);
+            SecurityService.LOGGER.log(Level.FINE, "Resource denied. login={0}; query={1}", new Object[] {getLogin(), resourceNames});
         }
         return granted;
     }
@@ -54,9 +55,9 @@ public class AuthenticatedUserDefault implements AuthenticatedUser {
     private boolean checkAndLog(final String resourceName) {
         final boolean granted = this.resources.contains(resourceName);
         if (granted) {
-            SecurityService.LOGGER.debug("Resource granted. login={}; query={}", getLogin(), resourceName);
+            SecurityService.LOGGER.log(Level.FINE, "Resource granted. login={0}; query={1}", new Object[] {getLogin(), resourceName});
         } else {
-            SecurityService.LOGGER.debug("Resource denied. login={}; query={}", getLogin(), resourceName);
+            SecurityService.LOGGER.log(Level.FINE, "Resource denied. login={0}; query={1}", new Object[] {getLogin(), resourceName});
         }
         return granted;
     }
