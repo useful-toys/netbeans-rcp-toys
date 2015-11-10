@@ -44,7 +44,7 @@ import org.openide.util.lookup.Lookups;
  *
  * @author Daniel Felix Ferber
  */
-public class EventBus implements Runnable {
+public class EventBus {
 
     private static final Logger logger = Logger.getLogger(EventBus.class.getName());
 
@@ -57,7 +57,7 @@ public class EventBus implements Runnable {
     private final Set<EventListener> edtGlobalListeners = new LinkedHashSet<>();
     private final Set<EventListener> localListeners = new LinkedHashSet<>();
     private final Set<EventListener> edtLocalListeners = new LinkedHashSet<>();
-    private List<EventListener> edtGlobalListenersList;
+    private List<EventListener> localListenersList;
     private List<EventListener> edtLocalListenersList;
 
     private static final Map<String, Map<String, EventBus>> EVENT_BUS_BY_CATEGORY_CONTEXT = new HashMap<>();
@@ -215,51 +215,41 @@ public class EventBus implements Runnable {
     public final void dispatch(final Event<?> event) {
         logger.log(Level.FINE, "Dispatch event. bus={0}, event={1}", new Object[]{this.getDisplayName(), event});
 
+        lockListener.lock();
+        try {
+            if (localListenersList == null) {
+                localListenersList = new ArrayList<>(localListeners);
+            }
+        } finally {
+            lockListener.unlock();
+        }
+
         callListeners(globalListeners, event);
         callListeners(localListeners, event);
+
         edtEventQueue.add(event);
+
         if (!edtEventQueue.isEmpty()) {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    /* */
-                    callAllListeners(edtGlobalListenersList, event);
-                    callAllListeners(edtLocalListeners, event);
+                    lockListener.lock();
+                    try {
+                        if (edtLocalListenersList == null) {
+                            edtLocalListenersList = new ArrayList<>(edtLocalListeners);
+                        }
+                    } finally {
+                        lockListener.unlock();
+                    }
+
+                    callListeners(edtGlobalListeners, event);
+                    callListeners(edtLocalListenersList, event);
                 }
             });
         }
     }
 
-//    public final void executeOnEventDispatchThread() {
-//        if (! lock.tryLock()) {
-//            lock.
-//            return;
-//        } el
-//                    
-//            final int holdCount = lock.getHoldCount();
-//            if (holdCount > 1) {
-//                /* já está executando. */
-//                lock.unlock();
-//                return;
-//            }
-//            try {
-//                if (!SwingUtilities.isEventDispatchThread()) {
-//                    try {
-//                        SwingUtilities.invokeAndWait(queue);
-//                    } catch (Exception | Error ex) {
-//                        logger.log(Level.SEVERE, "Failed to execNew EventBus. Null category implies no global listeners.");
-//                    } catch (InvocationTargetException ex) {
-//                        Exceptions.printStackTrace(ex);
-//                    }
-//                } else {
-//                    queue.run();
-//                }
-//            } finally {
-//                lock.unlock();
-//            }
-//        }
-//    }
-    protected final void callListeners(Collection<EventListener> listenersCollection, final Event<?> event) {
+    protected static void callListeners(Collection<EventListener> listenersCollection, final Event<?> event) {
         for (EventListener listener : listenersCollection) {
             try {
                 if (event.isCompatible(listener)) {
