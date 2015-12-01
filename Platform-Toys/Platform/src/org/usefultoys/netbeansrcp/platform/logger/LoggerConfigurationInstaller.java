@@ -5,7 +5,10 @@ package org.usefultoys.netbeansrcp.platform.logger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -47,6 +50,8 @@ public final class LoggerConfigurationInstaller implements Runnable {
         readUserConfigurationPropertiesFile();
 
         resetLogManager();
+
+        printLogManagerConfiguration();
     }
 
     /**
@@ -163,6 +168,7 @@ public final class LoggerConfigurationInstaller implements Runnable {
         try {
             logger.setLevel(level);
             System.setProperty(loggerName + PROPERTY_NAME_SUFFIX, level.getName());
+            LogManager.getLogManager().getLogger(loggerName);
         } catch (SecurityException e) {
             Logger.getLogger("").log(Level.WARNING, "Not allowed to change logger level. name=" + loggerName + " level=" + level.getName(), e);
         }
@@ -178,12 +184,12 @@ public final class LoggerConfigurationInstaller implements Runnable {
             try {
                 loggerFile = configRoot.createData(FILE_OBJECT_NAME);
                 loggerFile.setAttribute(EXAMPLE_LOGGER_NAME, "INFO");
-                Logger.getLogger("").log(Level.INFO, "Logger configuration: create layer.xml file object {0} at {1}", new Object[] {loggerFile.toURI(), FileUtil.toFile(loggerFile)});
+                Logger.getLogger("").log(Level.INFO, "Logger configuration: create layer.xml file object {0} at {1}", new Object[]{loggerFile.toURI(), FileUtil.toFile(loggerFile)});
             } catch (IOException e) {
                 Logger.getLogger("").log(Level.WARNING, "Failed to create 'Logger' file in system filesystem.", e);
             }
         } else {
-            Logger.getLogger("").log(Level.INFO, "Logger configuration: load layer.xml file object {0} at {1}", new Object[] {loggerFile.toURI(), FileUtil.toFile(loggerFile)});
+            Logger.getLogger("").log(Level.INFO, "Logger configuration: load layer.xml file object {0} at {1}", new Object[]{loggerFile.toURI(), FileUtil.toFile(loggerFile)});
             readLoggerLevelFromFileObject(loggerFile);
         }
     }
@@ -200,7 +206,7 @@ public final class LoggerConfigurationInstaller implements Runnable {
         if (loggerPropertiesFile == null) {
             try {
                 loggerPropertiesFile = configRoot.createData(PROPERTIES_FILE_NAME);
-                Logger.getLogger("").log(Level.INFO, "Logger configuration: create logger.properties file {0} at {1}", new Object[] {loggerPropertiesFile.toURI(), FileUtil.toFile(loggerPropertiesFile)});
+                Logger.getLogger("").log(Level.INFO, "Logger configuration: create logger.properties file {0} at {1}", new Object[]{loggerPropertiesFile.toURI(), FileUtil.toFile(loggerPropertiesFile)});
                 OutputStream os = loggerPropertiesFile.getOutputStream();
                 Properties properties = new Properties();
                 properties.put(EXAMPLE_LOGGER_NAME, "INFO");
@@ -210,7 +216,7 @@ public final class LoggerConfigurationInstaller implements Runnable {
                 Logger.getLogger("").log(Level.WARNING, "Failed to create logger.properties file in configuration directory.", e);
             }
         } else {
-            Logger.getLogger("").log(Level.INFO, "Logger configuration: load logger.properties file {0} at {1}", new Object[] {loggerPropertiesFile.toURI(), FileUtil.toFile(loggerPropertiesFile)});
+            Logger.getLogger("").log(Level.INFO, "Logger configuration: load logger.properties file {0} at {1}", new Object[]{loggerPropertiesFile.toURI(), FileUtil.toFile(loggerPropertiesFile)});
             Properties properties = new Properties();
             try {
                 InputStream is = loggerPropertiesFile.getInputStream();
@@ -223,4 +229,15 @@ public final class LoggerConfigurationInstaller implements Runnable {
         }
     }
 
+    static void printLogManagerConfiguration() {
+        final Enumeration<String> enumeration = LogManager.getLogManager().getLoggerNames();
+        List<String> loggerNames = new ArrayList<>(Collections.list(enumeration));
+        Collections.sort(loggerNames);
+        for (String loggerName : loggerNames) {
+            final Logger logger = LogManager.getLogManager().getLogger(loggerName);
+            if (logger.getLevel() != null) {
+                Logger.getLogger("").log(Level.INFO, "Logger configuration: {0}={1}", new Object[]{loggerName, logger.getLevel()});
+            }
+        }
+    }
 }
