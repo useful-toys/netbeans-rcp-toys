@@ -14,18 +14,58 @@ import java.util.logging.Logger;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.modules.OnStart;
+import org.usefultoys.netbeansrcp.platform.layer.ArgumentUrlLayer;
+import org.usefultoys.netbeansrcp.platform.layer.SystemPropertyUrlLayer;
 
+/**
+ * Overrides the default logger configuration with properties loaded from two
+ * possible sources: the layer.xml and the logger.properties file within the
+ * user configuration directory.
+ *
+ * Note that, by using {@link SystemPropertyUrlLayer} and
+ * {@link ArgumentUrlLayer}, your may provide additional layer.xml files located
+ * outside your application.
+ *
+ * @see https://github.com/useful-toys/netbeans-rcp-toys/wiki/Logger-Toys
+ *
+ * @author Daniel Felix Ferber
+ */
 @OnStart
 public final class LoggerConfigurationInstaller implements Runnable {
 
     static final String PROPERTIES_FILE_NAME = "logger.properties";
     static final String FILE_OBJECT_NAME = "Logger";
+    static final String PROPERTY_NAME_SUFFIX = ".level";
+    static final int PROPERTY_NAME_SUFFIX_LENGTH = PROPERTY_NAME_SUFFIX.length();
+    static final String EXAMPLE_LOGGER_NAME = LoggerConfigurationInstaller.class.getPackage().getName() + ".example";
 
+    @Override
+    public void run() {
+        resetHandlerLevel();
+
+        readLayerFileObject();
+        readUserConfigurationPropertiesFile();
+
+        resetLogManager();
+    }
+
+    /**
+     * Load all properties from the given properties repository as logger level
+     * configuration.
+     *
+     * @param properties the properties repository
+     */
     static void readLoggerLevelFromProperties(Properties properties) {
         for (String name : properties.stringPropertyNames()) {
             final Object levelStr = properties.getProperty(name);
-            if (name.endsWith(".level")) {
-                final String loggerName = name.substring(0, name.length() - 6);
+
+            /* 
+             * Two property notations are supported:
+             * - Just the property name.
+             * - Property name suffixed with '.level' as used by the Java native logger configuration
+             */
+            if (name.endsWith(PROPERTY_NAME_SUFFIX)) {
+                final String loggerName = name.substring(0, name.length() - PROPERTY_NAME_SUFFIX_LENGTH);
                 applyLoggerLevel(loggerName, levelStr);
             } else {
                 applyLoggerLevel(name, levelStr);
@@ -33,6 +73,12 @@ public final class LoggerConfigurationInstaller implements Runnable {
         }
     }
 
+    /**
+     * Load all properties from the given layer.xml file object as logger level
+     * configuration.
+     *
+     * @param loggerFO file object that holds properties
+     */
     static void readLoggerLevelFromFileObject(FileObject loggerFO) {
         final Enumeration<String> attributeEnum = loggerFO.getAttributes();
         while (attributeEnum.hasMoreElements()) {
@@ -42,7 +88,13 @@ public final class LoggerConfigurationInstaller implements Runnable {
         }
     }
 
+    /**
+     * Clear all existing handler configuration. Some handlers were configured
+     * with levels that would filter our messages.
+     */
     static void resetHandlerLevel() {
+        Logger.getLogger("").info("Logger configuration: set all handlers to level ALL.");
+
         final Logger rootLogger = Logger.getLogger("");
         for (Handler handler : rootLogger.getHandlers()) {
             try {
@@ -53,7 +105,13 @@ public final class LoggerConfigurationInstaller implements Runnable {
         }
     }
 
+    /**
+     * Clear all existing native logger configuration. Reinitialize the logging
+     * properties and reread the logging configuration.
+     */
     static void resetLogManager() {
+        Logger.getLogger("").info("Logger configuration: reinitialize LogManager.");
+
         try {
             LogManager.getLogManager().readConfiguration();
         } catch (IOException e) {
@@ -63,8 +121,16 @@ public final class LoggerConfigurationInstaller implements Runnable {
         }
     }
 
+    /**
+     * Apply a logger configuration as system property that will be understood
+     * by {@link #resetLogManager()}.
+     *
+     * @param loggerName logger name
+     * @param value one level name from java native logger, SLF4J or LOG4J.
+     */
     static void applyLoggerLevel(final String loggerName, final Object value) {
         final Logger logger = Logger.getLogger(loggerName);
+
         final Level level;
         try {
             if (value instanceof String) {
@@ -76,6 +142,10 @@ public final class LoggerConfigurationInstaller implements Runnable {
                     level = Level.FINER;
                 } else if ("TRACE".equals(levelName)) {
                     level = Level.FINEST;
+                } else if ("FATAL".equals(levelName)) {
+                    level = Level.SEVERE;
+                } else if ("ERROR".equals(levelName)) {
+                    level = Level.SEVERE;
                 } else {
                     try {
                         level = Level.parse(levelName);
@@ -92,58 +162,55 @@ public final class LoggerConfigurationInstaller implements Runnable {
         }
         try {
             logger.setLevel(level);
-            System.setProperty(loggerName + ".level", level.getName());
+            System.setProperty(loggerName + PROPERTY_NAME_SUFFIX, level.getName());
         } catch (SecurityException e) {
             Logger.getLogger("").log(Level.WARNING, "Not allowed to change logger level. name=" + loggerName + " level=" + level.getName(), e);
         }
     }
 
-    @Override
-    public void run() {
-        resetHandlerLevel();
-
-        readLayerFileObject();
-        readUserConfigurationPropertiesFile();
-
-        resetLogManager();
-    }
-
+    /**
+     * Load logger configuration from layer.xml file object.
+     */
     static void readLayerFileObject() {
         final FileObject configRoot = FileUtil.getConfigRoot();
         FileObject loggerFile = configRoot.getFileObject(FILE_OBJECT_NAME);
         if (loggerFile == null) {
             try {
                 loggerFile = configRoot.createData(FILE_OBJECT_NAME);
-                loggerFile.setAttribute(getExampleLoggerName(), "INFO");
+                loggerFile.setAttribute(EXAMPLE_LOGGER_NAME, "INFO");
+                Logger.getLogger("").log(Level.INFO, "Logger configuration: create layer.xml file object {0} at {1}", new Object[] {loggerFile.toURI(), FileUtil.toFile(loggerFile)});
             } catch (IOException e) {
                 Logger.getLogger("").log(Level.WARNING, "Failed to create 'Logger' file in system filesystem.", e);
             }
-        }
-        if (loggerFile != null) {
+        } else {
+            Logger.getLogger("").log(Level.INFO, "Logger configuration: load layer.xml file object {0} at {1}", new Object[] {loggerFile.toURI(), FileUtil.toFile(loggerFile)});
             readLoggerLevelFromFileObject(loggerFile);
         }
     }
 
-    private static String getExampleLoggerName() {
-        return LoggerConfigurationInstaller.class.getPackage().getName() + ".example";
-    }
-
+    /**
+     * Load logger configuration from property file within user configuration
+     * directory.
+     */
     static void readUserConfigurationPropertiesFile() {
+
         final FileObject configRoot = FileUtil.getConfigRoot();
         FileObject loggerPropertiesFile = configRoot.getFileObject(PROPERTIES_FILE_NAME);
+
         if (loggerPropertiesFile == null) {
             try {
                 loggerPropertiesFile = configRoot.createData(PROPERTIES_FILE_NAME);
+                Logger.getLogger("").log(Level.INFO, "Logger configuration: create logger.properties file {0} at {1}", new Object[] {loggerPropertiesFile.toURI(), FileUtil.toFile(loggerPropertiesFile)});
                 OutputStream os = loggerPropertiesFile.getOutputStream();
                 Properties properties = new Properties();
-                properties.put(getExampleLoggerName(), "INFO");
+                properties.put(EXAMPLE_LOGGER_NAME, "INFO");
                 properties.store(os, "Example logger configuration");
                 os.close();
             } catch (IOException e) {
                 Logger.getLogger("").log(Level.WARNING, "Failed to create logger.properties file in configuration directory.", e);
             }
-        }
-        if (loggerPropertiesFile != null) {
+        } else {
+            Logger.getLogger("").log(Level.INFO, "Logger configuration: load logger.properties file {0} at {1}", new Object[] {loggerPropertiesFile.toURI(), FileUtil.toFile(loggerPropertiesFile)});
             Properties properties = new Properties();
             try {
                 InputStream is = loggerPropertiesFile.getInputStream();
