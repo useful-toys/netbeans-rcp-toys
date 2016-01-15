@@ -74,6 +74,7 @@
                 </dependency>
             </module-dependencies>
             <public-packages>
+                <package>org.usefultoys.netbeansrcp.platform.bus</package>
                 <package>org.usefultoys.netbeansrcp.platform.cookies.api</package>
                 <package>org.usefultoys.netbeansrcp.platform.cookies.core</package>
                 <package>org.usefultoys.netbeansrcp.platform.cookies.spi</package>

@@ -5,10 +5,6 @@
  */
 package org.usefultoys.rcp.security.action;
 
-import org.usefultoys.rcp.platform.dialog.api.NetbeansDialogConvention;
-import org.usefultoys.rcp.security.api.AuthenticatedUser;
-import org.usefultoys.rcp.security.api.PasswordException;
-import org.usefultoys.rcp.security.api.SecurityService;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.Action;
@@ -16,7 +12,11 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
+import org.usefultoys.rcp.platform.dialog.api.NetbeansDialogConvention;
 import org.usefultoys.rcp.platform.dialog.notification.MessageUtil;
+import org.usefultoys.rcp.security.api.AuthenticatedUser;
+import org.usefultoys.rcp.security.api.PasswordException;
+import org.usefultoys.rcp.security.api.SecurityService;
 import org.usefultoys.rcp.security.ui.UserPasswordPanel;
 
 @ActionID(

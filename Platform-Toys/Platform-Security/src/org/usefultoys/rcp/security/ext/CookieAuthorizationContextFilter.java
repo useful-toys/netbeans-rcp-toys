@@ -6,7 +6,7 @@
 package org.usefultoys.rcp.security.ext;
 
 import org.openide.util.lookup.ServiceProvider;
-import org.usefultoys.platform.cookies.spi.ContextFilter;
+import org.usefultoys.netbeansrcp.platform.cookies.spi.ContextFilter;
 import org.usefultoys.rcp.security.api.AuthenticatedUser;
 import org.usefultoys.rcp.security.api.CookieAuthorization;
 import org.usefultoys.rcp.security.api.SecurityService;

@@ -30,10 +30,10 @@ public class AuthenticatedUserDefaultTest {
         resources = Collections.EMPTY_SET;
         Assert.assertFalse(user.checkAndLogAny(resources));
 
-        resources = new TreeSet<String>(Arrays.asList("a"));
+        resources = new TreeSet<>(Arrays.asList("a"));
         Assert.assertFalse(user.checkAndLogAny(resources));
 
-        resources = new TreeSet<String>(Arrays.asList("a", "b"));
+        resources = new TreeSet<>(Arrays.asList("a", "b"));
         Assert.assertFalse(user.checkAndLogAny(resources));
     }
 
