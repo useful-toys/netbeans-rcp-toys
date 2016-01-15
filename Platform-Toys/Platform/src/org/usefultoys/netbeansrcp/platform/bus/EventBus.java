@@ -4,24 +4,21 @@
  */
 package org.usefultoys.netbeansrcp.platform.bus;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.Lookups;
 
@@ -114,22 +111,32 @@ public class EventBus {
         this.category = category;
         this.context = context;
 
-        if (category != null) {
-            /* Popula os listeners registrados no layer.xml. */
-            final Lookup busLookup = Lookups.forPath("Bus/" + category);
-            final Collection<? extends EventListener> busListeners = busLookup.lookupAll(EventListener.class);
-            for (EventListener listener : busListeners) {
-                logger.log(Level.FINE, "New EventBus. Register global listener. listener={0}", listener);
-                globalListeners.add(listener);
+        /* Popula os listeners registrados no layer.xml. */
+        final Set<EventListener> usedListener = new HashSet<>();
+        final Lookup busLookup = Lookups.forPath(category == null ? "Safe" : "Safe/" + category);
+        final Collection<? extends EventListener> busListeners = busLookup.lookupAll(EventListener.class);
+        for (EventListener listener : busListeners) {
+            logger.log(Level.FINE, "New EventBus. Register global listener. listener={0}", listener);
+            globalListeners.add(listener);
+            usedListener.add(listener);
+        }
+        final Lookup edtBusLookup = Lookups.forPath(category == null ? "EDT" : "EDT/" + category);
+        final Collection<? extends EventListener> edtBusListeners = edtBusLookup.lookupAll(EventListener.class);
+        for (EventListener listener : edtBusListeners) {
+            logger.log(Level.FINE, "New EventBus. Register global EDT listener. listener={0}", listener);
+            edtGlobalListeners.add(listener);
+            usedListener.add(listener);
+        }
+        
+        /** Support legacy registrarion via xml. */
+        final Lookup edtBusLookup2 = Lookup.getDefault();
+        final Collection<? extends EventListener> edtBusListeners2 = edtBusLookup2.lookupAll(EventListener.class);
+        for (EventListener listener : edtBusListeners2) {
+            if (usedListener.contains(listener)) {
+                continue;
             }
-            final Lookup edtBusLookup = Lookups.forPath("EdtBus/" + category);
-            final Collection<? extends EventListener> edtBusListeners = edtBusLookup.lookupAll(EventListener.class);
-            for (EventListener listener : edtBusListeners) {
-                logger.log(Level.FINE, "New EventBus. Register global EDT listener. listener={0}", listener);
-                edtGlobalListeners.add(listener);
-            }
-        } else {
-            logger.log(Level.FINE, "New EventBus. Null category implies no global listeners.");
+            logger.log(Level.FINE, "New EventBus. Register global EDT listener. listener={0}", listener);
+            edtGlobalListeners.add(listener);
         }
     }
 
@@ -138,6 +145,10 @@ public class EventBus {
     }
 
     public final void register(final EventListener listener) {
+        edtRegister(listener);
+    }
+    
+    public final void safeRegister(final EventListener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("listener == null");
         }
