@@ -32,7 +32,7 @@ import org.openide.util.Utilities;
 import org.openide.windows.TopComponent;
 
 /**
- * Top component which displays the current global context. Useful for debugging
+ * TopComponent which displays the current global context. Useful for debugging
  * which cookies are currently exposed by platforms active top component.
  * 
  * @see https://github.com/useful-toys/netbeans-rcp-toys/wiki/Global-Context-Inspector

@@ -23,7 +23,6 @@
  */
 package org.usefultoys.netbeansrcp.platform.layer;
 
-import org.usefultoys.netbeansrcp.platform.layer.DynamicLayer;
 import java.net.URL;
 import java.util.Collection;
 import java.util.logging.Level;

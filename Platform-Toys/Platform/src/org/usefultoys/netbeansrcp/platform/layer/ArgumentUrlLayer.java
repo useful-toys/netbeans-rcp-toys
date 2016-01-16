@@ -23,7 +23,6 @@
  */
 package org.usefultoys.netbeansrcp.platform.layer;
 
-import org.usefultoys.netbeansrcp.platform.layer.DynamicLayer;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,8 +35,12 @@ import org.openide.util.lookup.ServiceProvider;
 import org.openide.util.lookup.ServiceProviders;
 
 /**
+ * Command line argument processor that loads the resource given by the
+ * --layerUrl <path> argument into the Netbeans RCP system filesystem. This
+ * allows adding extra layer,xml files as configuration files hosted outside of
+ * your application deployment.
  *
- * @author X7WS
+ * @author Daniel Felix Ferber
  */
 @ServiceProviders(value = {
     @ServiceProvider(service = ArgsProcessor.class),
