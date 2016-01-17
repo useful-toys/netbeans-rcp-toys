@@ -77,15 +77,13 @@ public class Bus {
     private final String category;
     private final String context;
 
-    private final Queue<Caller> edtEventQueue = new ConcurrentLinkedQueue<>();
-
     private final ReentrantLock listenerCollectionLock = new ReentrantLock();
-    private final Set<Listener> threadSafeListeners = new LinkedHashSet<>();
+    private final Set<Listener> safeGlobalListeners = new LinkedHashSet<>();
     private final Set<Listener> edtGlobalListeners = new LinkedHashSet<>();
-    private final Set<Listener> theadSafeLocalListeners = new LinkedHashSet<>();
-    private final Set<Listener> edtLocalListeners = new LinkedHashSet<>();
-    private List<Listener> localListenersList;
-    private List<Listener> edtLocalListenersList;
+    private final Set<Listener> newSafeLocalListeners = new LinkedHashSet<>();
+    private final Set<Listener> newEdtLocalListeners = new LinkedHashSet<>();
+    private List<Listener> currentSafeLocalListeners;
+    private List<Listener> currentEdtLocalListeners;
 
     private static final ReentrantLock instanceLock = new ReentrantLock();
     private static final Map<String, Map<String, Bus>> BUS_BY_CATEGORY_CONTEXT = new HashMap<>();
@@ -131,18 +129,27 @@ public class Bus {
             throw new IllegalArgumentException("category == null");
         }
 
-        Map<String, Bus> busByCategory = BUS_BY_CATEGORY_CONTEXT.get(category);
-        if (busByCategory == null) {
-            BUS_BY_CATEGORY_CONTEXT.put(category, busByCategory = new HashMap<>());
+        Bus bus = null;
+        boolean created = false;
+        try {
+            instanceLock.lock();
+            Map<String, Bus> busByCategory = BUS_BY_CATEGORY_CONTEXT.get(category);
+            if (busByCategory == null) {
+                BUS_BY_CATEGORY_CONTEXT.put(category, busByCategory = new HashMap<>());
+            }
+            bus = busByCategory.get(context);
+            if (bus == null) {
+                busByCategory.put(category, bus = new Bus(category, context));
+                created = true;
+            }
+        } finally {
+            instanceLock.unlock();
         }
-        Bus bus = busByCategory.get(context);
-        if (bus == null) {
-            busByCategory.put(category, bus = new Bus(category, context));
-            logFine("getInstance creates new EventBus. category={0}, context={1}", category, context);
+        if (created) {
+            logFine("getInstance creates new bus. category={0}, context={1}", category, context);
         } else {
-            logFine("getInstance reuses existing EventBus. category={0}, context={1}", category, context);
+            logFine("getInstance reuses existing bus. category={0}, context={1}", category, context);
         }
-
         return bus;
     }
 
@@ -159,7 +166,7 @@ public class Bus {
         final Collection<? extends Listener> busListeners = busLookup.lookupAll(Listener.class);
         for (Listener listener : busListeners) {
             logFine("New EventBus. Register global listener. listener={0}", listener);
-            threadSafeListeners.add(listener);
+            safeGlobalListeners.add(listener);
             usedListener.add(listener);
         }
         final Lookup edtBusLookup = Lookups.forPath(category == null ? "EDT" : "EDT/" + category);
@@ -179,7 +186,7 @@ public class Bus {
             if (usedListener.contains(listener)) {
                 continue;
             }
-            logFine("New EventBus. Register global EDT listener. listener={0}", listener);
+            logFine("New EventBus. Register legacy EDT listener. listener={0}", listener);
             edtGlobalListeners.add(listener);
         }
     }
@@ -188,6 +195,9 @@ public class Bus {
         return this.context + this.category;
     }
 
+    /**
+     * Support legacy EDT listener.
+     */
     public final void register(final Listener listener) {
         edtRegister(listener);
     }
@@ -200,9 +210,9 @@ public class Bus {
         boolean added;
         listenerCollectionLock.lock();
         try {
-            added = theadSafeLocalListeners.add(listener);
+            added = newSafeLocalListeners.add(listener);
             if (added) {
-                localListenersList = null;
+                currentSafeLocalListeners = null;
             }
         } finally {
             listenerCollectionLock.unlock();
@@ -223,9 +233,9 @@ public class Bus {
         boolean added;
         listenerCollectionLock.lock();
         try {
-            added = edtLocalListeners.add(listener);
+            added = newEdtLocalListeners.add(listener);
             if (added) {
-                edtLocalListenersList = null;
+                currentEdtLocalListeners = null;
             }
         } finally {
             listenerCollectionLock.unlock();
@@ -246,10 +256,10 @@ public class Bus {
         boolean removed;
         listenerCollectionLock.lock();
         try {
-            removed = theadSafeLocalListeners.remove(listener) || edtLocalListeners.remove(listener);
+            removed = newSafeLocalListeners.remove(listener) || newEdtLocalListeners.remove(listener);
             if (removed) {
-                localListenersList = null;
-                edtLocalListenersList = null;
+                currentSafeLocalListeners = null;
+                currentEdtLocalListeners = null;
             }
         } finally {
             listenerCollectionLock.unlock();
@@ -265,35 +275,31 @@ public class Bus {
     public final void dispatch(final Caller<?> caller) {
         logFine("Dispatch caller. bus={0}, caller={1}", this.getDisplayName(), caller);
 
-        listenerCollectionLock.lock();
         try {
-            if (localListenersList == null) {
-                localListenersList = new ArrayList<>(theadSafeLocalListeners);
+            listenerCollectionLock.lock();
+            if (currentSafeLocalListeners == null) {
+                currentSafeLocalListeners = new ArrayList<>(newSafeLocalListeners);
             }
         } finally {
             listenerCollectionLock.unlock();
         }
 
-        callListeners(threadSafeListeners, caller);
-        callListeners(theadSafeLocalListeners, caller);
+        callListeners(safeGlobalListeners, caller);
+        callListeners(newSafeLocalListeners, caller);
 
-        edtEventQueue.add(caller);
-
-        if (!edtEventQueue.isEmpty()) {
-            SwingUtilities.invokeLater(() -> {
+        SwingUtilities.invokeLater(() -> {
+            try {
                 listenerCollectionLock.lock();
-                try {
-                    if (edtLocalListenersList == null) {
-                        edtLocalListenersList = new ArrayList<>(edtLocalListeners);
-                    }
-                } finally {
-                    listenerCollectionLock.unlock();
+                if (currentEdtLocalListeners == null) {
+                    currentEdtLocalListeners = new ArrayList<>(newEdtLocalListeners);
                 }
-                
-                callListeners(edtGlobalListeners, caller);
-                callListeners(edtLocalListenersList, caller);
-            });
-        }
+            } finally {
+                listenerCollectionLock.unlock();
+            }
+
+            callListeners(edtGlobalListeners, caller);
+            callListeners(currentEdtLocalListeners, caller);
+        });
     }
 
     private static void callListeners(Collection<Listener> listenersCollection, final Caller<?> caller) {
