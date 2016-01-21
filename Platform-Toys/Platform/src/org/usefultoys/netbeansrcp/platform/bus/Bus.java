@@ -11,7 +11,6 @@ import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +55,7 @@ public class Bus {
         // no methods expected
     }
 
-    public static interface ProxyListener extends Listener {
+    public static interface MultiListener extends Listener {
 
         List<Listener> getCurrentThreadListeners();
 
@@ -173,33 +172,39 @@ public class Bus {
         this.context = context;
 
         /* Popula os listeners registrados no layer.xml. */
-        final Set<Listener> usedListener = new HashSet<>();
-        final Lookup busLookup = Lookups.forPath(category == null ? "Safe" : "Safe/" + category);
-        final Collection<? extends Listener> busListeners = busLookup.lookupAll(Listener.class);
+        final Lookup listenerLookup;
+        if (category == null) {
+            listenerLookup = Lookups.forPath("Bus");
+        } else {
+            listenerLookup = Lookups.forPath("Bus/" + category);
+        }
+        final Collection<? extends Listener> busListeners = listenerLookup.lookupAll(Listener.class);
         for (Listener listener : busListeners) {
-            debug("New EventBus. Register global listener. listener={0}", listener);
-            permanentCurrentThreadListeners.add(listener);
-            usedListener.add(listener);
-        }
-        final Lookup edtBusLookup = Lookups.forPath(category == null ? "EDT" : "EDT/" + category);
-        final Collection<? extends Listener> edtBusListeners = edtBusLookup.lookupAll(Listener.class);
-        for (Listener listener : edtBusListeners) {
-            debug("New EventBus. Register global EDT listener. listener={0}", listener);
-            permanentViewThreadListeners.add(listener);
-            usedListener.add(listener);
-        }
+            Thread listenerThread = getThread(listener);
+            boolean currentThreadAdded;
+            boolean viewThreadAdded;
 
-        /**
-         * Support legacy registrarion via xml.
-         */
-        final Lookup edtBusLookup2 = Lookup.getDefault();
-        final Collection<? extends Listener> edtBusListeners2 = edtBusLookup2.lookupAll(Listener.class);
-        for (Listener listener : edtBusListeners2) {
-            if (usedListener.contains(listener)) {
-                continue;
+            switch (listenerThread) {
+                case CURRENT:
+                    currentThreadAdded = permanentCurrentThreadListeners.add(listener);
+
+                    if (currentThreadAdded) {
+                        debug("Constructor. Current thread: added. bus={0}, listener={1}", this, listener);
+                    } else {
+                        warn("Constructor. Current thread: exists. bus={0}, listener={1}", this, listener);
+                    }
+
+                    break;
+
+                default:
+                    viewThreadAdded = permanentViewThreadListeners.add(listener);
+
+                    if (viewThreadAdded) {
+                        debug("Constructor. View thread: added. bus={0}, listener={1}", this, listener);
+                    } else {
+                        warn("Constructor. View thread: exists. bus={0}, listener={1}", this, listener);
+                    }
             }
-            debug("New EventBus. Register global EDT listener. listener={0}", listener);
-            permanentViewThreadListeners.add(listener);
         }
     }
 
@@ -239,17 +244,11 @@ public class Bus {
         return this.context + this.category;
     }
 
-    public final void register(final Listener listener) {
-        addListener(listener);
-    }
-
     public final void addListener(final Listener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("listener == null");
         }
-
-        Bus.Config annotation = listener.getClass().getAnnotation(Bus.Config.class);
-        Bus.Thread listenerThread = annotation.thread();
+        Thread listenerThread = getThread(listener);
 
         boolean currentThreadAdded;
         boolean viewThreadAdded;
@@ -267,9 +266,9 @@ public class Bus {
                 }
 
                 if (currentThreadAdded) {
-                    debug("Register current thread listener: added. bus={0}, listener={1}", this.getDisplayName(), listener);
+                    debug("Add listener. Current thread: added. bus={0}, listener={1}", this, listener);
                 } else {
-                    warn("Register current thread listener: already registered. bus={0}, listener={1}", this.getDisplayName(), listener);
+                    warn("Add listener. Current thread: exists. bus={0}, listener={1}", this, listener);
                 }
 
                 break;
@@ -277,7 +276,7 @@ public class Bus {
             default:
                 currentThraedListenersLock.lock();
                 try {
-                    viewThreadAdded = nonPermanentViewThreadListeners.add(listener);
+                    viewThreadAdded = newNonPermanentViewThreadListeners.add(listener);
                     if (viewThreadAdded) {
                         nonPermanentViewThreadListeners = null;
                     }
@@ -286,11 +285,22 @@ public class Bus {
                 }
 
                 if (viewThreadAdded) {
-                    debug("Register view thread listener: added. bus={0}, listener={1}", this.getDisplayName(), listener);
+                    debug("Add listener. View thread: added. bus={0}, listener={1}", this, listener);
                 } else {
-                    warn("Register view thread listener: already registered. bus={0}, listener={1}", this.getDisplayName(), listener);
+                    warn("Add listener. View thread: exists. bus={0}, listener={1}", this, listener);
                 }
         }
+    }
+
+    private Thread getThread(final Listener listener) {
+        Bus.Config annotation = listener.getClass().getAnnotation(Bus.Config.class);
+        Bus.Thread listenerThread;
+        if (annotation == null || annotation.thread() == null) {
+            listenerThread = Thread.EDT;
+        } else {
+            listenerThread = annotation.thread();
+        }
+        return listenerThread;
     }
 
     public final void removeListener(final Listener listener) {
@@ -326,11 +336,6 @@ public class Bus {
         }
     }
 
-    @Deprecated
-    public final void dispatch(final Caller caller) {
-        callListeners(caller);
-    }
-
     public final void callListeners(final Caller caller) {
         debug("Call listeners. bus={0}, caller={1}", this.getDisplayName(), caller);
 
@@ -347,9 +352,9 @@ public class Bus {
     private static void callCurrentThreadListenersImpl(Collection<Listener> listenersCollection, final Caller caller) {
         for (Listener listener : listenersCollection) {
             try {
-                if (listener instanceof ProxyListener && caller.isCompatible(listener)) {
+                if (listener instanceof MultiListener && caller.isCompatible(listener)) {
                     debug("Call proxy listener. listener={0}, caller={1}", listener, caller);
-                    callCurrentThreadListenersImpl(((ProxyListener) listener).getCurrentThreadListeners(), caller);
+                    callCurrentThreadListenersImpl(((MultiListener) listener).getCurrentThreadListeners(), caller);
                     caller.callListener(listener);
                 } else if (caller.isCompatible(listener)) {
                     debug("Call listener. listener={0}, caller={1}", listener, caller);
@@ -364,9 +369,9 @@ public class Bus {
     private static void callViewThreadListenersImpl(Collection<Listener> listenersCollection, final Caller caller) {
         for (Listener listener : listenersCollection) {
             try {
-                if (listener instanceof ProxyListener && caller.isCompatible(listener)) {
+                if (listener instanceof MultiListener && caller.isCompatible(listener)) {
                     debug("Call proxy listener. listener={0}, caller={1}", listener, caller);
-                    callViewThreadListenersImpl(((ProxyListener) listener).getViewThreadListeners(), caller);
+                    callViewThreadListenersImpl(((MultiListener) listener).getViewThreadListeners(), caller);
                     caller.callListener(listener);
                 } else if (caller.isCompatible(listener)) {
                     debug("Call listener. listener={0}, caller={1}", listener, caller);

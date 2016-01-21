@@ -6,7 +6,7 @@ package org.usefultoys.netbeansrcp.platform.bus;
 
 /**
  *
- * @author x7ws
+ * @author Daniel Felix Ferber
  */
 public abstract class TypeCaller<ListenerType extends Bus.Listener> implements Bus.Caller {
 
@@ -36,7 +36,7 @@ public abstract class TypeCaller<ListenerType extends Bus.Listener> implements B
 
     @Override
     public void callListener(Bus.Listener listener) {
-        callListener((ListenerType) listener);
+        doCallListener((ListenerType) listener);
     }
 
     protected abstract void doCallListener(ListenerType listener);
