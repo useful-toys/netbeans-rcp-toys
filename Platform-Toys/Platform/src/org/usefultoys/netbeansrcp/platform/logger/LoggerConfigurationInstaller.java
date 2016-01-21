@@ -65,14 +65,18 @@ public final class LoggerConfigurationInstaller implements Runnable {
     static final String PROPERTY_NAME_SUFFIX = ".level";
     static final int PROPERTY_NAME_SUFFIX_LENGTH = PROPERTY_NAME_SUFFIX.length();
     static final String EXAMPLE_LOGGER_NAME = LoggerConfigurationInstaller.class.getPackage().getName() + ".example";
-    public static final String LOGGER_URL_SYSTEM_PROPERTY = "java.util.logging.config.file";
+    public static final String LOGGER_URL_SYSTEM_PROPERTY1 = "java.util.logging.config.file";
+    public static final String LOGGER_URL_SYSTEM_PROPERTY2 = "jnlp.java.util.logging.config.file";
+    public static final String LOGGER_URL_SYSTEM_PROPERTY3 = "javaws.java.util.logging.config.file";
 
     @Override
     public void run() {
         resetExistingHandlerLevel();
 
-        readLayerFileObject();
-        readPropertiesFileFromSystemProperty();
+        readAttrobutesFromLayerFileObject();
+        readPropertiesFileFromSystemProperty(LOGGER_URL_SYSTEM_PROPERTY1);
+        readPropertiesFileFromSystemProperty(LOGGER_URL_SYSTEM_PROPERTY2);
+        readPropertiesFileFromSystemProperty(LOGGER_URL_SYSTEM_PROPERTY3);
         readPropertiesFileFromConfigurationDirectory();
 
         resetLogManager();
@@ -211,7 +215,7 @@ public final class LoggerConfigurationInstaller implements Runnable {
      * Load logger configuration from layer.xml file object.
      * Create xml if it does not yet exist.
      */
-    static void readLayerFileObject() {
+    static void readAttrobutesFromLayerFileObject() {
         final FileObject configRoot = FileUtil.getConfigRoot();
         FileObject loggerFile = configRoot.getFileObject(FILE_OBJECT_NAME);
         if (loggerFile == null) {
@@ -265,9 +269,9 @@ public final class LoggerConfigurationInstaller implements Runnable {
      * Load logger configuration from property file within user configuration
      * directory.
      */
-    static void readPropertiesFileFromSystemProperty() {
+    static void readPropertiesFileFromSystemProperty(String propertyName) {
 
-        final String urlString = System.getProperty(LOGGER_URL_SYSTEM_PROPERTY);
+        final String urlString = System.getProperty(propertyName);
         if (urlString == null) {
             return;
         }
@@ -275,10 +279,10 @@ public final class LoggerConfigurationInstaller implements Runnable {
         try {
             url = new URL(urlString);
         } catch (MalformedURLException e) {
-            logWarn("Logger configuration: System property {1} is a malformed URL. exception={0}", e.getMessage(), LOGGER_URL_SYSTEM_PROPERTY);
+            logWarn("Logger configuration: System property {1} is a malformed URL. exception={0}", e.getMessage(), LOGGER_URL_SYSTEM_PROPERTY2);
             return;
         }
-        logInfo("Logger configuration: Load properties from URL given by {1}: {0}", url.toString(), LOGGER_URL_SYSTEM_PROPERTY);
+        logInfo("Logger configuration: Load properties from URL given by {1}: {0}", url.toString(), LOGGER_URL_SYSTEM_PROPERTY2);
         Properties properties = new Properties();
         try (InputStream is = url.openStream()) {
             properties.load(is);
