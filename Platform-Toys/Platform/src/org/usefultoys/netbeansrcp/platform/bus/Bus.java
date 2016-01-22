@@ -240,10 +240,6 @@ public class Bus {
         }
     }
 
-    public final String getDisplayName() {
-        return this.context + this.category;
-    }
-
     public final void addListener(final Listener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("listener == null");
@@ -326,18 +322,18 @@ public class Bus {
         }
 
         if (localThreadRemoved) {
-            debug("Unregister local thread listener: removed. bus={0}, listener={1}", this.getDisplayName(), listener);
+            debug("Remove listener. Current thread: removed. bus={0}, listener={1}", this, listener);
         }
         if (viewThreadRemoved) {
-            debug("Unregister view thread listener: removed. bus={0}, listener={1}", this.getDisplayName(), listener);
+            debug("Remove listener. View thread: removed. bus={0}, listener={1}", this, listener);
         }
         if (!localThreadRemoved && !viewThreadRemoved) {
-            warn("Unregister listener: not yet registered! bus={0}, listener={1}", this.getDisplayName(), listener);
+            warn("Remove listener: inexists. bus={0}, listener={1}", this, listener);
         }
     }
 
     public final void callListeners(final Caller caller) {
-        debug("Call listeners. bus={0}, caller={1}", this.getDisplayName(), caller);
+        info("Call listeners. bus={0}, caller={1}", caller);
 
         callCurrentThreadListenersImpl(getPermanentCurrentThreadListeners(), caller);
         callCurrentThreadListenersImpl(getNonPermanentCurrentThreadListeners(), caller);
@@ -353,11 +349,11 @@ public class Bus {
         for (Listener listener : listenersCollection) {
             try {
                 if (listener instanceof MultiListener && caller.isCompatible(listener)) {
-                    debug("Call proxy listener. listener={0}, caller={1}", listener, caller);
+                    trace("Call current thread multi-listener. listener={0}, caller={1}", listener, caller);
                     callCurrentThreadListenersImpl(((MultiListener) listener).getCurrentThreadListeners(), caller);
                     caller.callListener(listener);
                 } else if (caller.isCompatible(listener)) {
-                    debug("Call listener. listener={0}, caller={1}", listener, caller);
+                    trace("Call current thread listener. listener={0}, caller={1}", listener, caller);
                     caller.callListener(listener);
                 }
             } catch (Exception | Error e) {
@@ -370,11 +366,11 @@ public class Bus {
         for (Listener listener : listenersCollection) {
             try {
                 if (listener instanceof MultiListener && caller.isCompatible(listener)) {
-                    debug("Call proxy listener. listener={0}, caller={1}", listener, caller);
+                    trace("Call view thread multi-listener. listener={0}, caller={1}", listener, caller);
                     callViewThreadListenersImpl(((MultiListener) listener).getViewThreadListeners(), caller);
                     caller.callListener(listener);
                 } else if (caller.isCompatible(listener)) {
-                    debug("Call listener. listener={0}, caller={1}", listener, caller);
+                    trace("Call view thread listener. listener={0}, caller={1}", listener, caller);
                     caller.callListener(listener);
                 }
             } catch (Exception | Error e) {
@@ -383,10 +379,20 @@ public class Bus {
         }
     }
 
+    private static void trace(String message, Object... parameters) {
+        if (logger.isLoggable(Level.FINEST)) {
+            LogRecord record = new LogRecord(Level.FINEST, message);
+            record.setParameters(parameters);
+            record.setLoggerName(logger.getName());
+            logger.log(record);
+        }
+    }
+
     private static void debug(String message, Object... parameters) {
         if (logger.isLoggable(Level.FINE)) {
             LogRecord record = new LogRecord(Level.FINE, message);
             record.setParameters(parameters);
+            record.setLoggerName(logger.getName());
             logger.log(record);
         }
     }
@@ -395,6 +401,7 @@ public class Bus {
         if (logger.isLoggable(Level.WARNING)) {
             LogRecord record = new LogRecord(Level.WARNING, message);
             record.setParameters(parameters);
+            record.setLoggerName(logger.getName());
             logger.log(record);
         }
     }
@@ -403,6 +410,7 @@ public class Bus {
         if (logger.isLoggable(Level.INFO)) {
             LogRecord record = new LogRecord(Level.INFO, message);
             record.setParameters(parameters);
+            record.setLoggerName(logger.getName());
             logger.log(record);
         }
     }
@@ -411,6 +419,7 @@ public class Bus {
         if (logger.isLoggable(Level.SEVERE)) {
             LogRecord record = new LogRecord(Level.SEVERE, message);
             record.setParameters(parameters);
+            record.setLoggerName(logger.getName());
             record.setThrown(throwable);
             logger.log(record);
         }
@@ -418,6 +427,6 @@ public class Bus {
 
     @Override
     public String toString() {
-        return "Bus{" + this.getDisplayName() + '}';
+        return "Bus{" + this.context + "/" + this.category + '}';
     }
 }
