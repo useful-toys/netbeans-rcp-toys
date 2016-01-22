@@ -16,7 +16,6 @@ import org.openide.util.Exceptions;
 
 /**
  *
- * @author X7WS
  */
 public class SecurityServiceDefault implements SecurityService {
 

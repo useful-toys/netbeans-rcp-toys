@@ -7,7 +7,6 @@ import org.openide.NotifyDescriptor;
 /**
  * Métodos para apresentar dialógos de informação, pergunta e erro.
  *
- * @author x7ws
  */
 public class MessageUtil {
 
