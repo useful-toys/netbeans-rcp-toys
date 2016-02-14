@@ -14,7 +14,6 @@ import org.openide.util.RequestProcessor;
  * Métodos para mostrar uma mensagem de notificação que desaparece após algum
  * tempo.
  *
- * @author x7ws
  */
 public class NotificationUtil {
 

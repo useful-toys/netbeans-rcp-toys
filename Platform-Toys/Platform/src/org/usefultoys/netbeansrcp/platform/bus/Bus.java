@@ -4,22 +4,24 @@
  */
 package org.usefultoys.netbeansrcp.platform.bus;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 import org.openide.util.Lookup;
+import org.openide.util.RequestProcessor;
 import org.openide.util.lookup.Lookups;
 
 /**
@@ -53,23 +55,39 @@ public class Bus {
         // no methods expected
     }
 
-    public static abstract class Caller<ListenerType extends Bus.Listener> {
+    public static interface MultiListener extends Listener {
 
-        private final Class<ListenerType> listenerType;
+        List<Listener> getCurrentThreadListeners();
 
-        public Caller(final Class<ListenerType> listenerType) {
-            super();
-            if (listenerType == null) {
-                throw new IllegalArgumentException();
-            }
-            this.listenerType = listenerType;
-        }
+        List<Listener> getViewThreadListeners();
 
-        protected abstract void callListener(ListenerType listener);
+        void addListener(Listener listener);
 
-        private void callListenerImpl(Listener listener) {
-            callListener((ListenerType) listener);
-        }
+        void removeListener(Listener listener);
+    }
+
+    public static interface Caller {
+
+        boolean isCompatible(Listener listener);
+
+        void callListener(Listener listener);
+    }
+
+    /**
+     * Enumerates threads used by the bus to execute listener calls.
+     *
+     * @author Daniel Felix Ferber
+     */
+    public static enum Thread {
+
+        EDT, CURRENT, POOL
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE)
+    @interface Config {
+
+        Thread thread();
     }
 
     private static final Logger logger = Logger.getLogger(Bus.class.getName());
@@ -77,13 +95,15 @@ public class Bus {
     private final String category;
     private final String context;
 
-    private final ReentrantLock listenerCollectionLock = new ReentrantLock();
-    private final Set<Listener> safeGlobalListeners = new LinkedHashSet<>();
-    private final Set<Listener> edtGlobalListeners = new LinkedHashSet<>();
-    private final Set<Listener> newSafeLocalListeners = new LinkedHashSet<>();
-    private final Set<Listener> newEdtLocalListeners = new LinkedHashSet<>();
-    private List<Listener> currentSafeLocalListeners;
-    private List<Listener> currentEdtLocalListeners;
+    private final ReentrantLock currentThraedListenersLock = new ReentrantLock();
+    private final List<Listener> permanentCurrentThreadListeners = new ArrayList<>();
+    private List<Listener> nonPermanentCurrentThreadListeners;
+    private final Set<Listener> newNonPermanentCurrentThreadListeners = new LinkedHashSet<>();
+
+    private final ReentrantLock viewThreadListenersLock = new ReentrantLock();
+    private final Set<Listener> permanentViewThreadListeners = new LinkedHashSet<>();
+    private List<Listener> nonPermanentViewThreadListeners;
+    private final Set<Listener> newNonPermanentViewThreadListeners = new LinkedHashSet<>();
 
     private static final ReentrantLock instanceLock = new ReentrantLock();
     private static final Map<String, Map<String, Bus>> BUS_BY_CATEGORY_CONTEXT = new HashMap<>();
@@ -92,11 +112,11 @@ public class Bus {
     private static final Bus DEFAULT_BUS = new Bus(null, "default");
 
     public static synchronized Bus getIntance() {
-        logFine("getInstance on default EventBus.");
+        debug("getInstance on default EventBus.");
         return DEFAULT_BUS;
     }
 
-    public static synchronized Bus getIntance(String category) {
+    public static synchronized Bus getInstance(String category) {
         if (category == null) {
             throw new IllegalArgumentException("category == null");
         }
@@ -114,9 +134,9 @@ public class Bus {
             instanceLock.unlock();
         }
         if (created) {
-            logFine("getInstance creates new bus. category={0}", category);
+            debug("getInstance creates new bus. category={0}", category);
         } else {
-            logFine("getInstance reuses existing bus. category={0}", category);
+            debug("getInstance reuses existing bus. category={0}", category);
         }
         return bus;
     }
@@ -129,220 +149,277 @@ public class Bus {
             throw new IllegalArgumentException("category == null");
         }
 
-        Bus bus = null;
-        boolean created = false;
-        try {
-            instanceLock.lock();
-            Map<String, Bus> busByCategory = BUS_BY_CATEGORY_CONTEXT.get(category);
-            if (busByCategory == null) {
-                BUS_BY_CATEGORY_CONTEXT.put(category, busByCategory = new HashMap<>());
-            }
-            bus = busByCategory.get(context);
-            if (bus == null) {
-                busByCategory.put(category, bus = new Bus(category, context));
-                created = true;
-            }
-        } finally {
-            instanceLock.unlock();
+        Map<String, Bus> busByCategory = BUS_BY_CATEGORY_CONTEXT.get(category);
+        if (busByCategory == null) {
+            BUS_BY_CATEGORY_CONTEXT.put(category, busByCategory = new HashMap<>());
         }
-        if (created) {
-            logFine("getInstance creates new bus. category={0}, context={1}", category, context);
+        Bus bus = busByCategory.get(context);
+        if (bus == null) {
+            busByCategory.put(category, bus = new Bus(category, context));
+            debug("getInstance creates new EventBus. category={0}, context={1}", category, context);
         } else {
-            logFine("getInstance reuses existing bus. category={0}, context={1}", category, context);
+            debug("getInstance reuses existing EventBus. category={0}, context={1}", category, context);
         }
+
         return bus;
     }
 
     Bus(final String category, final String context) {
         /* Non visible constructor. */
 
-        logInfo("Constructor. category={0}, name={1}", category, context);
+        info("Constructor. category={0}, name={1}", category, context);
         this.category = category;
         this.context = context;
 
         /* Popula os listeners registrados no layer.xml. */
-        final Set<Listener> usedListener = new HashSet<>();
-        final Lookup busLookup = Lookups.forPath(category == null ? "Safe" : "Safe/" + category);
-        final Collection<? extends Listener> busListeners = busLookup.lookupAll(Listener.class);
+        final Lookup listenerLookup;
+        if (category == null) {
+            listenerLookup = Lookups.forPath("Bus");
+        } else {
+            listenerLookup = Lookups.forPath("Bus/" + category);
+        }
+        final Collection<? extends Listener> busListeners = listenerLookup.lookupAll(Listener.class);
         for (Listener listener : busListeners) {
-            logFine("New EventBus. Register global listener. listener={0}", listener);
-            safeGlobalListeners.add(listener);
-            usedListener.add(listener);
-        }
-        final Lookup edtBusLookup = Lookups.forPath(category == null ? "EDT" : "EDT/" + category);
-        final Collection<? extends Listener> edtBusListeners = edtBusLookup.lookupAll(Listener.class);
-        for (Listener listener : edtBusListeners) {
-            logFine("New EventBus. Register global EDT listener. listener={0}", listener);
-            edtGlobalListeners.add(listener);
-            usedListener.add(listener);
-        }
+            Thread listenerThread = getThread(listener);
+            boolean currentThreadAdded;
+            boolean viewThreadAdded;
 
-        /**
-         * Support legacy registrarion via xml.
-         */
-        final Lookup edtBusLookup2 = Lookup.getDefault();
-        final Collection<? extends Listener> edtBusListeners2 = edtBusLookup2.lookupAll(Listener.class);
-        for (Listener listener : edtBusListeners2) {
-            if (usedListener.contains(listener)) {
-                continue;
+            switch (listenerThread) {
+                case CURRENT:
+                    currentThreadAdded = permanentCurrentThreadListeners.add(listener);
+
+                    if (currentThreadAdded) {
+                        debug("Constructor. Current thread: added. bus={0}, listener={1}", this, listener);
+                    } else {
+                        warn("Constructor. Current thread: exists. bus={0}, listener={1}", this, listener);
+                    }
+
+                    break;
+
+                default:
+                    viewThreadAdded = permanentViewThreadListeners.add(listener);
+
+                    if (viewThreadAdded) {
+                        debug("Constructor. View thread: added. bus={0}, listener={1}", this, listener);
+                    } else {
+                        warn("Constructor. View thread: exists. bus={0}, listener={1}", this, listener);
+                    }
             }
-            logFine("New EventBus. Register legacy EDT listener. listener={0}", listener);
-            edtGlobalListeners.add(listener);
         }
     }
 
-    public final String getDisplayName() {
-        return this.context + this.category;
+    public List<Listener> getPermanentCurrentThreadListeners() {
+        return permanentCurrentThreadListeners;
     }
 
-    /**
-     * Support legacy EDT listener.
-     */
-    public final void register(final Listener listener) {
-        edtRegister(listener);
+    private List<Listener> getNonPermanentCurrentThreadListeners() {
+        currentThraedListenersLock.lock();
+        try {
+            if (nonPermanentCurrentThreadListeners == null) {
+                nonPermanentCurrentThreadListeners = new ArrayList<>(newNonPermanentCurrentThreadListeners);
+            }
+            return nonPermanentCurrentThreadListeners;
+        } finally {
+            currentThraedListenersLock.unlock();
+        }
     }
 
-    public final void safeRegister(final Listener listener) {
+    private Set<Listener> getPermanentViewThreadListeners() {
+        return permanentViewThreadListeners;
+    }
+
+    private List<Listener> getNonPermanentViewThreadListeners() {
+        viewThreadListenersLock.lock();
+        try {
+            if (nonPermanentViewThreadListeners == null) {
+                nonPermanentViewThreadListeners = new ArrayList<>(newNonPermanentViewThreadListeners);
+            }
+            return nonPermanentViewThreadListeners;
+        } finally {
+            viewThreadListenersLock.unlock();
+        }
+    }
+
+    public final void addListener(final Listener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("listener == null");
+        }
+        Thread listenerThread = getThread(listener);
+
+        boolean currentThreadAdded;
+        boolean viewThreadAdded;
+
+        switch (listenerThread) {
+            case CURRENT:
+                currentThraedListenersLock.lock();
+                try {
+                    currentThreadAdded = newNonPermanentCurrentThreadListeners.add(listener);
+                    if (currentThreadAdded) {
+                        nonPermanentViewThreadListeners = null;
+                    }
+                } finally {
+                    currentThraedListenersLock.unlock();
+                }
+
+                if (currentThreadAdded) {
+                    debug("Add listener. Current thread: added. bus={0}, listener={1}", this, listener);
+                } else {
+                    warn("Add listener. Current thread: exists. bus={0}, listener={1}", this, listener);
+                }
+
+                break;
+
+            default:
+                currentThraedListenersLock.lock();
+                try {
+                    viewThreadAdded = newNonPermanentViewThreadListeners.add(listener);
+                    if (viewThreadAdded) {
+                        nonPermanentViewThreadListeners = null;
+                    }
+                } finally {
+                    currentThraedListenersLock.unlock();
+                }
+
+                if (viewThreadAdded) {
+                    debug("Add listener. View thread: added. bus={0}, listener={1}", this, listener);
+                } else {
+                    warn("Add listener. View thread: exists. bus={0}, listener={1}", this, listener);
+                }
+        }
+    }
+
+    private Thread getThread(final Listener listener) {
+        Bus.Config annotation = listener.getClass().getAnnotation(Bus.Config.class);
+        Bus.Thread listenerThread;
+        if (annotation == null || annotation.thread() == null) {
+            listenerThread = Thread.EDT;
+        } else {
+            listenerThread = annotation.thread();
+        }
+        return listenerThread;
+    }
+
+    public final void removeListener(final Listener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("listener == null");
         }
 
-        boolean added;
-        listenerCollectionLock.lock();
+        boolean localThreadRemoved;
+        boolean viewThreadRemoved;
+
+        currentThraedListenersLock.lock();
         try {
-            added = newSafeLocalListeners.add(listener);
-            if (added) {
-                currentSafeLocalListeners = null;
+            localThreadRemoved = newNonPermanentCurrentThreadListeners.remove(listener);
+            viewThreadRemoved = nonPermanentViewThreadListeners.remove(listener);
+            if (localThreadRemoved) {
+                nonPermanentCurrentThreadListeners = null;
+            }
+            if (viewThreadRemoved) {
+                nonPermanentViewThreadListeners = null;
             }
         } finally {
-            listenerCollectionLock.unlock();
+            currentThraedListenersLock.unlock();
         }
 
-        if (added) {
-            logFine("Register local listener. bus={0}, listener={1}", this.getDisplayName(), listener);
-        } else {
-            logWarn("Register local listener: already registered! bus={0}, listener={1}", this.getDisplayName(), listener);
+        if (localThreadRemoved) {
+            debug("Remove listener. Current thread: removed. bus={0}, listener={1}", this, listener);
+        }
+        if (viewThreadRemoved) {
+            debug("Remove listener. View thread: removed. bus={0}, listener={1}", this, listener);
+        }
+        if (!localThreadRemoved && !viewThreadRemoved) {
+            warn("Remove listener: inexists. bus={0}, listener={1}", this, listener);
         }
     }
 
-    public final void edtRegister(final Listener listener) {
-        if (listener == null) {
-            throw new IllegalArgumentException("listener == null");
-        }
+    public final void callListeners(final Caller caller) {
+        info("Call listeners. bus={0}, caller={1}", caller);
 
-        boolean added;
-        listenerCollectionLock.lock();
-        try {
-            added = newEdtLocalListeners.add(listener);
-            if (added) {
-                currentEdtLocalListeners = null;
-            }
-        } finally {
-            listenerCollectionLock.unlock();
-        }
-
-        if (added) {
-            logFine("Register local listener. bus={0}, listener={1}", this.getDisplayName(), listener);
-        } else {
-            logWarn("Register local listener: already registered! bus={0}, listener={1}", this.getDisplayName(), listener);
-        }
-    }
-
-    public final void unregister(final Listener listener) {
-        if (listener == null) {
-            throw new IllegalArgumentException("listener == null");
-        }
-
-        boolean removed;
-        listenerCollectionLock.lock();
-        try {
-            removed = newSafeLocalListeners.remove(listener) || newEdtLocalListeners.remove(listener);
-            if (removed) {
-                currentSafeLocalListeners = null;
-                currentEdtLocalListeners = null;
-            }
-        } finally {
-            listenerCollectionLock.unlock();
-        }
-
-        if (removed) {
-            logFine("Unregister local listener. bus={0}, listener={1}", this.getDisplayName(), listener);
-        } else {
-            logWarn("Unregister local listener: not yet registered! bus={0}, listener={1}", this.getDisplayName(), listener);
-        }
-    }
-
-    public final void dispatch(final Caller<?> caller) {
-        logFine("Dispatch caller. bus={0}, caller={1}", this.getDisplayName(), caller);
-
-        try {
-            listenerCollectionLock.lock();
-            if (currentSafeLocalListeners == null) {
-                currentSafeLocalListeners = new ArrayList<>(newSafeLocalListeners);
-            }
-        } finally {
-            listenerCollectionLock.unlock();
-        }
-
-        callListeners(safeGlobalListeners, caller);
-        callListeners(newSafeLocalListeners, caller);
+        callCurrentThreadListenersImpl(getPermanentCurrentThreadListeners(), caller);
+        callCurrentThreadListenersImpl(getNonPermanentCurrentThreadListeners(), caller);
 
         SwingUtilities.invokeLater(() -> {
-            try {
-                listenerCollectionLock.lock();
-                if (currentEdtLocalListeners == null) {
-                    currentEdtLocalListeners = new ArrayList<>(newEdtLocalListeners);
-                }
-            } finally {
-                listenerCollectionLock.unlock();
-            }
 
-            callListeners(edtGlobalListeners, caller);
-            callListeners(currentEdtLocalListeners, caller);
+            callViewThreadListenersImpl(getPermanentViewThreadListeners(), caller);
+            callViewThreadListenersImpl(getNonPermanentViewThreadListeners(), caller);
         });
     }
 
-    private static void callListeners(Collection<Listener> listenersCollection, final Caller<?> caller) {
+    private static void callCurrentThreadListenersImpl(Collection<Listener> listenersCollection, final Caller caller) {
         for (Listener listener : listenersCollection) {
             try {
-                if (caller.listenerType.isAssignableFrom(listener.getClass())) {
-                    logFine("Event listener. listener={0}, caller={1}", listener, caller);
-                    caller.callListenerImpl(listener);
+                if (listener instanceof MultiListener && caller.isCompatible(listener)) {
+                    trace("Call current thread multi-listener. listener={0}, caller={1}", listener, caller);
+                    callCurrentThreadListenersImpl(((MultiListener) listener).getCurrentThreadListeners(), caller);
+                    caller.callListener(listener);
+                } else if (caller.isCompatible(listener)) {
+                    trace("Call current thread listener. listener={0}, caller={1}", listener, caller);
+                    caller.callListener(listener);
                 }
             } catch (Exception | Error e) {
-                logSereve("Event listener failed. listener={0}, caller={1}", e, listener, caller);
+                error("Call listener failed. listener={0}, caller={1}", e, listener, caller);
             }
         }
     }
 
-    private static void logFine(String message, Object... parameters) {
+    private static void callViewThreadListenersImpl(Collection<Listener> listenersCollection, final Caller caller) {
+        for (Listener listener : listenersCollection) {
+            try {
+                if (listener instanceof MultiListener && caller.isCompatible(listener)) {
+                    trace("Call view thread multi-listener. listener={0}, caller={1}", listener, caller);
+                    callViewThreadListenersImpl(((MultiListener) listener).getViewThreadListeners(), caller);
+                    caller.callListener(listener);
+                } else if (caller.isCompatible(listener)) {
+                    trace("Call view thread listener. listener={0}, caller={1}", listener, caller);
+                    caller.callListener(listener);
+                }
+            } catch (Exception | Error e) {
+                error("Call listener failed. listener={0}, caller={1}", e, listener, caller);
+            }
+        }
+    }
+
+    private static void trace(String message, Object... parameters) {
+        if (logger.isLoggable(Level.FINEST)) {
+            LogRecord record = new LogRecord(Level.FINEST, message);
+            record.setParameters(parameters);
+            record.setLoggerName(logger.getName());
+            logger.log(record);
+        }
+    }
+
+    private static void debug(String message, Object... parameters) {
         if (logger.isLoggable(Level.FINE)) {
             LogRecord record = new LogRecord(Level.FINE, message);
             record.setParameters(parameters);
+            record.setLoggerName(logger.getName());
             logger.log(record);
         }
     }
 
-    private static void logWarn(String message, Object... parameters) {
+    private static void warn(String message, Object... parameters) {
         if (logger.isLoggable(Level.WARNING)) {
             LogRecord record = new LogRecord(Level.WARNING, message);
             record.setParameters(parameters);
+            record.setLoggerName(logger.getName());
             logger.log(record);
         }
     }
 
-    private static void logInfo(String message, Object... parameters) {
+    private static void info(String message, Object... parameters) {
         if (logger.isLoggable(Level.INFO)) {
             LogRecord record = new LogRecord(Level.INFO, message);
             record.setParameters(parameters);
+            record.setLoggerName(logger.getName());
             logger.log(record);
         }
     }
 
-    private static void logSereve(String message, Throwable throwable, Object... parameters) {
+    private static void error(String message, Throwable throwable, Object... parameters) {
         if (logger.isLoggable(Level.SEVERE)) {
             LogRecord record = new LogRecord(Level.SEVERE, message);
             record.setParameters(parameters);
+            record.setLoggerName(logger.getName());
             record.setThrown(throwable);
             logger.log(record);
         }
@@ -350,6 +427,6 @@ public class Bus {
 
     @Override
     public String toString() {
-        return "EventBus{" + this.getDisplayName() + '}';
+        return "Bus{" + this.context + "/" + this.category + '}';
     }
 }

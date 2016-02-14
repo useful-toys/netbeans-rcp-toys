@@ -10,7 +10,6 @@ import org.usefultoys.rcp.platform.dialog.core.DialogConventionDefault;
 
 /**
  *
- * @author X7WS
  */
 @NbBundle.Messages({
     "CredentialPanel_Message_Default=Enter login and password.",

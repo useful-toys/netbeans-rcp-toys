@@ -38,7 +38,7 @@ import org.xml.sax.SAXException;
 
 /**
  * @see http://wiki.netbeans.org/DevFaqDynamicSystemFilesystem
- * @author Daniel Felix Ferber - X7WS
+ * @author Daniel Felix Ferber
  */
 @ServiceProvider(service = FileSystem.class)
 public class DynamicLayer extends MultiFileSystem {

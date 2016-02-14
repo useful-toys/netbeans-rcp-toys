@@ -11,7 +11,6 @@ import org.openide.windows.TopComponent;
 /**
  * Métodos para ajustar a aparência da aba do TopComponent conforme seu estado.
  *
- * @author x7ws
  */
 public class TopComponentTabUtil {
 
