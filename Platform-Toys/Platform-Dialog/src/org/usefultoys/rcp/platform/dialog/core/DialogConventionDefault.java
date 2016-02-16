@@ -63,7 +63,9 @@ public abstract class DialogConventionDefault<Inbound, Outbound>
     public abstract Outbound createOutbound();
 
     @Override
-    public abstract Inbound createInbound();
+    public Inbound createInbound() {
+        return null;
+    }
 
     protected void convertInboundToFields(Inbound inbound) {
         /* Nothing by default. */
@@ -82,9 +84,25 @@ public abstract class DialogConventionDefault<Inbound, Outbound>
         /* Nothing by default. */
     }
 
+    protected void loadFieldDefaults() {
+        /* Nothing by default. */
+    }
+
+    protected void saveFieldDefaults() {
+        /* Nothing by default. */
+    }
+
+    @Override
+    public final void toFields() {
+        startChange();
+        loadFieldDefaults();
+        stopChange();
+    }
+
     @Override
     public final void toFields(Inbound inbound) {
         startChange();
+        loadFieldDefaults();
         loadInboundDefaults(inbound);
         convertInboundToFields(inbound);
         stopChange();
@@ -96,6 +114,7 @@ public abstract class DialogConventionDefault<Inbound, Outbound>
         convertFieldToOutbound(outbound);
         executePosValidation(outbound);
         saveOutboundDefaults(outbound);
+        saveFieldDefaults();
     }
 
     protected String executePreValidation() throws IllegalStateException {
@@ -159,6 +178,7 @@ public abstract class DialogConventionDefault<Inbound, Outbound>
         updateEnabled();
         updateValues();
     }
+    
     private final DocumentListener fieldDocumentListener = new DocumentListener() {
 
         @Override

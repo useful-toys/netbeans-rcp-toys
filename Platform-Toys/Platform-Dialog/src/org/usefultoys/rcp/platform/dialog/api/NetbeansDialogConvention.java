@@ -119,14 +119,13 @@ public class NetbeansDialogConvention<Inbound, Outbound> {
         if (inbound != null) {
             dialogConvention.toFields(inbound);
         } else {
-            dialogConvention.updateAll();
+            dialogConvention.toFields();
         }
         this.updateDialogDescriptorDefaultMessage();
         this.dialogConvention.getDialogState().addPropertyChangeListener(new DialogConventionPropertyChangeListener());
-        DialogDisplayer.getDefault().notify(dialogDescriptor);
+        final Object result = DialogDisplayer.getDefault().notify(dialogDescriptor);
         this.dialogConvention.getDialogState().removePropertyChangeListener(new DialogConventionPropertyChangeListener());
-        return outbound;
-
+        return result == DialogDescriptor.OK_OPTION ?  outbound : null;
     }
 
     private class EditAndProcessContext {

@@ -11,7 +11,6 @@ package org.usefultoys.rcp.platform.dialog.api;
  */
 public interface DialogConvention<Inbound, Outbound> {
 
-
     interface Support<Inbound, Outbound> {
 
         DialogConvention<Inbound, Outbound> getDialogConvention();
@@ -21,10 +20,9 @@ public interface DialogConvention<Inbound, Outbound> {
 
     Outbound createOutbound();
 
-    /**
-     * Inbound with default values.
-     */
     Inbound createInbound();
+
+    void toFields();
 
     void toFields(Inbound inbound);
 
@@ -35,5 +33,4 @@ public interface DialogConvention<Inbound, Outbound> {
     void updateAll();
 
     void setEditable(boolean b);
-
 }
