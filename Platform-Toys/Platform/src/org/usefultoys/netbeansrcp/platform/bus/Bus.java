@@ -21,25 +21,26 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 import org.openide.util.Lookup;
-import org.openide.util.RequestProcessor;
 import org.openide.util.lookup.Lookups;
 
 /**
- * Mecanismo de comunicação entre módulos. Não requer que os módulos conheçam um
- * ao outro, desde que concordem com um conjunto de mensagens pré-estabelecido.
+ * An bus that propagates notifications to interested listeners.
  * <p>
- * É possível obter um barramento para cada tema de mensagens. Os listeners
- * podem associar-se somente aos barramentos relevantes, que evita o recebimento
- * de mensagens que não são de seu interesse.
+ * There is on global singleton bus. Listeners may to narrow down to
+ * notification they are interested of by registering to a specific bus given by
+ * a category or by a dynamic context.
  * <p>
- * O barramento está associado a um objeto que identifica o tema das mensagens.
- * Quando este objeto for eliminado pelo garbage collector, o barramento deixará
- * de existir automaticamente, as mensagens pendentes serão descartadas e o
- * vínculo com os listeners é desfeito.
+ * Listeners shall implement the {@link Listener} or {@link MultiListener}
+ * interface. The former receives notifications from the bus. The later receives
+ * and redirects notifications to a group of listeners added dynamically at runtime.
  * <p>
- * É usado somente uma única {@link RequestProcessor.Task} para tratar as
- * mensagens de todos os barramentos. A Task é re-agendada ou re-iniciada quando
- * novas mensagens são adicionadas a uma dos barramentos.
+ * Listeners annotated with {@code Config(thread=CURRENT)} are called
+ * immediately after a notification is dispatched, which is suitable as a
+ * callback mechanism. Listeners annotated with {@code Config(thread=EDT)} are
+ * called soon on the swing event thread, which is suitable for listeners that
+ * update views in response to model changes.. Listeners annotated with
+ * {@code Config(thread=POOL)} are called later in a thread pool, which is
+ * suitable for notifications that start a background processing.
  *
  * @author Daniel Felix Ferber
  */

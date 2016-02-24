@@ -51,9 +51,7 @@ public class DynamicLayer extends MultiFileSystem {
             URL url2 = new URL(layerUrlString);
             URI uri = new URI(url2.getProtocol(), url2.getUserInfo(), url2.getHost(), url2.getPort(), url2.getPath(), url2.getQuery(), url2.getRef());
             url = uri.toURL();
-        } catch (MalformedURLException ex) {
-            throw new IllegalArgumentException("Invalid URL.", ex);
-        } catch (URISyntaxException ex) {
+        } catch (MalformedURLException | URISyntaxException ex) {
             throw new IllegalArgumentException("Invalid URL.", ex);
         }
         try {

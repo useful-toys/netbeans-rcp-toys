@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  * 
- * Copyright (c) 2015 Daniel Felix Ferber
+ * Copyright (c) 2016 Daniel Felix Ferber
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,11 @@ import org.openide.util.lookup.ServiceProviders;
  * --layerUrl <path> argument into the Netbeans RCP system filesystem. This
  * allows adding extra layer,xml files as configuration files hosted outside of
  * your application deployment.
+ * <br>Warning: The command line processor runs during platform initialization,
+ * in parallel to other module installers or runnable annotated with @OnStart.
+ * Therefore, the resource may not have been loaded into the system filesystem
+ * yet. Such installers or runnables must not relay on configuration provided by
+ * the resource.
  *
  * @author Daniel Felix Ferber
  */
@@ -61,7 +66,7 @@ public class ArgumentUrlLayer extends DynamicLayer implements ArgsProcessor {
                 URL url = validateUrl(layerUrlString);
                 addFileSystemUrl(url);
             } catch (IllegalArgumentException e) {
-                logger.log(Level.SEVERE, "Failed to add layer file. layerUrl=" + layerUrlString + "'", e);
+                logger.log(Level.SEVERE, "Failed to add layer file. layerUrl='" + layerUrlString + "'", e);
             }
         }
     }
