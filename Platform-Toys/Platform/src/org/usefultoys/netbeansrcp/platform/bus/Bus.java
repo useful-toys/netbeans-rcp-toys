@@ -311,7 +311,7 @@ public class Bus {
         currentThraedListenersLock.lock();
         try {
             localThreadRemoved = newNonPermanentCurrentThreadListeners.remove(listener);
-            viewThreadRemoved = nonPermanentViewThreadListeners.remove(listener);
+            viewThreadRemoved = newNonPermanentViewThreadListeners.remove(listener);
             if (localThreadRemoved) {
                 nonPermanentCurrentThreadListeners = null;
             }
