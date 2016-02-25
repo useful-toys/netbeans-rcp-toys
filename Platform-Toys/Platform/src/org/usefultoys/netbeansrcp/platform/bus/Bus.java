@@ -311,15 +311,21 @@ public class Bus {
         currentThraedListenersLock.lock();
         try {
             localThreadRemoved = newNonPermanentCurrentThreadListeners.remove(listener);
-            viewThreadRemoved = newNonPermanentViewThreadListeners.remove(listener);
             if (localThreadRemoved) {
                 nonPermanentCurrentThreadListeners = null;
             }
+        } finally {
+            currentThraedListenersLock.unlock();
+        }
+        
+        viewThreadListenersLock.lock();
+        try {
+            viewThreadRemoved = newNonPermanentViewThreadListeners.remove(listener);
             if (viewThreadRemoved) {
                 nonPermanentViewThreadListeners = null;
             }
         } finally {
-            currentThraedListenersLock.unlock();
+            viewThreadListenersLock.unlock();
         }
 
         if (localThreadRemoved) {
