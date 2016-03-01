@@ -78,6 +78,7 @@
                 <package>org.usefultoys.netbeansrcp.platform.cookies.api</package>
                 <package>org.usefultoys.netbeansrcp.platform.cookies.core</package>
                 <package>org.usefultoys.netbeansrcp.platform.cookies.spi</package>
+                <package>org.usefultoys.netbeansrcp.platform.kit</package>
             </public-packages>
         </data>
     </configuration>
