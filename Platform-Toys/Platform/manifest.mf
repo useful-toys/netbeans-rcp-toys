@@ -3,5 +3,6 @@ AutoUpdate-Show-In-Client: true
 OpenIDE-Module: org.usefultoys.netbeansrcp.platform
 OpenIDE-Module-Layer: org/usefultoys/netbeansrcp/platform/layer.xml
 OpenIDE-Module-Localizing-Bundle: org/usefultoys/netbeansrcp/platform/Bundle.properties
+OpenIDE-Module-Requires: org.openide.windows.WindowManager
 OpenIDE-Module-Specification-Version: 1.0
 

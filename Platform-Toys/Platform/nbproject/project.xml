@@ -65,6 +65,14 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>org.openide.util.ui</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>9.4.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.openide.windows</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -79,6 +87,8 @@
                 <package>org.usefultoys.netbeansrcp.platform.cookies.core</package>
                 <package>org.usefultoys.netbeansrcp.platform.cookies.spi</package>
                 <package>org.usefultoys.netbeansrcp.platform.kit</package>
+                <package>org.usefultoys.netbeansrcp.platform.messages.api</package>
+                <package>org.usefultoys.netbeansrcp.platform.messages.spi</package>
             </public-packages>
         </data>
     </configuration>
