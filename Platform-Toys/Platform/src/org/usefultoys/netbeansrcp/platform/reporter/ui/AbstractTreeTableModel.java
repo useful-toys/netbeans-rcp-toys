@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.usefultoys.netbeansrcp.platform.messages.ui;
+package org.usefultoys.netbeansrcp.platform.reporter.ui;
 
 import javax.swing.event.EventListenerList;
 import javax.swing.event.TreeModelEvent;
@@ -11,7 +11,7 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreePath;
  
 public abstract class AbstractTreeTableModel implements TreeTableModel {
-    protected Object root;
+    protected Object rootNode;
     protected EventListenerList listenerList = new EventListenerList();
  
     private static final int CHANGED = 0;
@@ -20,31 +20,37 @@ public abstract class AbstractTreeTableModel implements TreeTableModel {
     private static final int STRUCTURE_CHANGED = 3;
  
     public AbstractTreeTableModel(Object root) {
-        this.root = root;
+        this.rootNode = root;
     }
  
+    @Override
     public Object getRoot() {
-        return root;
+        return rootNode;
     }
  
+    @Override
     public boolean isLeaf(Object node) {
         return getChildCount(node) == 0;
     }
  
+    @Override
     public void valueForPathChanged(TreePath path, Object newValue) {
     }
  
     /**
      * Die Methode wird normalerweise nicht aufgerufen.
      */
+    @Override
     public int getIndexOfChild(Object parent, Object child) {
         return 0;
     }
  
+    @Override
     public void addTreeModelListener(TreeModelListener l) {
         listenerList.add(TreeModelListener.class, l);
     }
  
+    @Override
     public void removeTreeModelListener(TreeModelListener l) {
         listenerList.remove(TreeModelListener.class, l);
     }
@@ -54,7 +60,6 @@ public abstract class AbstractTreeTableModel implements TreeTableModel {
         TreeModelEvent e = new TreeModelEvent(source, path, childIndices, children);
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i] == TreeModelListener.class) {
- 
                 switch (changeType) {
                 case CHANGED:
                     ((TreeModelListener) listeners[i + 1]).treeNodesChanged(e);
@@ -71,7 +76,6 @@ public abstract class AbstractTreeTableModel implements TreeTableModel {
                 default:
                     break;
                 }
- 
             }
         }
     }

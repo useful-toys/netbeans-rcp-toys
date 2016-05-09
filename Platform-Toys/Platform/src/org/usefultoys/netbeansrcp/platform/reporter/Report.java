@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.usefultoys.netbeansrcp.platform.messages.api;
+package org.usefultoys.netbeansrcp.platform.reporter;
 
 import java.util.Map;
 
@@ -13,6 +13,12 @@ import java.util.Map;
  */
 public interface Report {
 
+    String getParentHash();
+    
+    String getHash();
+
+    long getPosition();
+    
     String getCategory();
 
     String getName();

@@ -3,12 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.usefultoys.netbeansrcp.platform.messages.ui;
-
+package org.usefultoys.netbeansrcp.platform.reporter.ui;
 
 import javax.swing.JTree;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.TreePath;
 
@@ -21,6 +22,28 @@ public class TreeTableModelAdapter extends AbstractTableModel {
         this.tree = tree;
         this.treeTableModel = treeTableModel;
 
+        treeTableModel.addTreeModelListener(new TreeModelListener() {
+            @Override
+            public void treeNodesChanged(TreeModelEvent e) {
+                fireTableDataChanged();
+            }
+
+            @Override
+            public void treeNodesInserted(TreeModelEvent e) {
+                tree.expandRow(0);
+                fireTableDataChanged();
+            }
+
+            @Override
+            public void treeNodesRemoved(TreeModelEvent e) {
+                fireTableDataChanged();
+            }
+
+            @Override
+            public void treeStructureChanged(TreeModelEvent e) {
+                fireTableDataChanged();
+            }
+        });
         tree.addTreeExpansionListener(new TreeExpansionListener() {
             @Override
             public void treeExpanded(TreeExpansionEvent event) {

@@ -3,16 +3,29 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.usefultoys.netbeansrcp.platform.messages.impl;
+package org.usefultoys.netbeansrcp.platform.reporter.impl;
 
 import java.util.Collections;
 import java.util.Map;
-import org.usefultoys.netbeansrcp.platform.messages.api.Report;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
+import org.usefultoys.netbeansrcp.platform.reporter.Report;
 
+/**
+ * Default implementation for {@link Report}.
+ *
+ * @author Daniel Felix Ferber
+ */
 public class ReportImpl implements Report {
 
-    protected String category;
-    protected String name;
+    private static final ConcurrentMap<String, AtomicLong> positionByCategory = new ConcurrentHashMap<String, AtomicLong>();
+
+    protected final String parentHash;
+    protected final String hash;
+    protected final String category;
+    protected final String name;
+    protected final long position;
     /**
      * A short, human readable, optional title of the execution.
      */
@@ -56,6 +69,25 @@ public class ReportImpl implements Report {
      */
     protected Map<String, String> context;
 
+    public ReportImpl(String category, String name) {
+        this(category, name, null);
+    }
+
+    private ReportImpl(String category, String name, String parentHash) {
+        this.category = category;
+        this.name = name;
+        positionByCategory.computeIfAbsent(category, c -> new AtomicLong(0));
+        final AtomicLong atomicLong = positionByCategory.get(category);
+        atomicLong.compareAndSet(Long.MAX_VALUE, 0);
+        this.position = atomicLong.incrementAndGet();
+        if (name == null) {
+            this.hash = category + '/' + position;
+        } else {
+            this.hash = category + '/' + name + '/' + position;
+        }
+        this.parentHash = parentHash;
+    }
+
     @Override
     public String getCategory() {
         return category;
@@ -64,6 +96,11 @@ public class ReportImpl implements Report {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public long getPosition() {
+        return position;
     }
 
     @Override
@@ -164,5 +201,35 @@ public class ReportImpl implements Report {
             return null;
         }
         return Collections.unmodifiableMap(context);
+    }
+
+    @Override
+    public String getHash() {
+        return hash;
+    }
+
+    @Override
+    public String getParentHash() {
+        return parentHash;
+    }
+
+    @Override
+    public int hashCode() {
+        return hash.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ReportImpl other = (ReportImpl) obj;
+        return this.hash.equals(other.hash);
     }
 }

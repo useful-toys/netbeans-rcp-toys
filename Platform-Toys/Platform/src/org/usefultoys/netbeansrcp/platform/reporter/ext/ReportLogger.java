@@ -3,14 +3,22 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.usefultoys.netbeansrcp.platform.messages.ext;
+package org.usefultoys.netbeansrcp.platform.reporter.ext;
 
 import java.util.Map;
 import java.util.logging.Logger;
-import org.usefultoys.netbeansrcp.platform.messages.api.Report;
-import org.usefultoys.netbeansrcp.platform.messages.spi.ReportListener;
+import org.openide.util.lookup.ServiceProvider;
+import org.usefultoys.netbeansrcp.platform.reporter.Report;
+import org.usefultoys.netbeansrcp.platform.reporter.ReporterService;
 
-public class ReportLogger implements ReportListener {
+/**
+ * Writes reports to platform logger.
+ *
+ * @author Daniel Felix Ferber
+ *
+ */
+@ServiceProvider(service = ReporterService.ReportListener.class)
+public class ReportLogger implements ReporterService.ReportListener {
 
     @Override
     public void start(Report report) {
@@ -102,7 +110,7 @@ public class ReportLogger implements ReportListener {
                 buffer.append(UnitFormatter.nanoseconds(nanoSecondsPerIteration));
             }
         }
-        
+
         final Runtime runtime = Runtime.getRuntime();
         long runtime_usedMemory = runtime.totalMemory() - runtime.freeMemory();
         buffer.append("; ");

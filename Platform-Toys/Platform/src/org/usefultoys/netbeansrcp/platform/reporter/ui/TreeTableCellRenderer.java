@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.usefultoys.netbeansrcp.platform.messages.ui;
+package org.usefultoys.netbeansrcp.platform.reporter.ui;
 
 import java.awt.Component;
 import java.awt.Graphics;
@@ -24,6 +24,7 @@ public class TreeTableCellRenderer extends JTree implements TableCellRenderer {
     public TreeTableCellRenderer(JTable treeTable, TreeModel model) {
         super(model);
         this.treeTable = treeTable;
+        this.expandRow(0);
 
         // Setzen der Zeilenhoehe fuer die JTable
         // Muss explizit aufgerufen werden, weil treeTable noch

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.usefultoys.netbeansrcp.platform.messages.ext;
+package org.usefultoys.netbeansrcp.platform.reporter.ext;
 
 /**
  * Collection of methods to format numbers, rounding them to an unit that reduces their string representation.

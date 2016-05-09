@@ -11,7 +11,8 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
-import org.usefultoys.netbeansrcp.platform.messages.api.ReporterService;
+import org.usefultoys.netbeansrcp.platform.reporter.Reporter;
+import org.usefultoys.netbeansrcp.platform.reporter.ReporterService;
 
 @ActionID(
         category = "Teste",
@@ -27,6 +28,7 @@ public final class TesteAction1 implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         ReporterService s = ReporterService.getDefault();
-        ReporterService r = s.createReporter("teste");
+        Reporter r = s.createReporter("teste").start();
+        r.ok();
     }
 }

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.usefultoys.netbeansrcp.platform.messages.ui;
+package org.usefultoys.netbeansrcp.platform.reporter.ui;
 
 import javax.swing.tree.TreeModel;
  

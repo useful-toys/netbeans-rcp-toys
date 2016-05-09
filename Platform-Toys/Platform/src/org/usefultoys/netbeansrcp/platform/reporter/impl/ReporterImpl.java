@@ -3,49 +3,44 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.usefultoys.netbeansrcp.platform.messages.impl;
+package org.usefultoys.netbeansrcp.platform.reporter.impl;
 
-import org.usefultoys.netbeansrcp.platform.messages.api.Reporter;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
+import org.usefultoys.netbeansrcp.platform.reporter.Reporter;
 
+/**
+ * Default implementation for {@link Reporter}.
+ *
+ * @author Daniel Felix Ferber
+ */
 public class ReporterImpl implements Reporter {
 
-    ReportImpl report = new ReportImpl();
+    private final ReporterServiceImpl parent;
+    private final ReportImpl report;
+    private long lastProgressTime = 0;
+    private long lastProgressIteration = 0;
 
-    public ReporterImpl(String category) {
-        this.report.category = category;
+    public ReporterImpl(ReporterServiceImpl parent, String category) {
+        this.report = new ReportImpl(category, null);
+        this.parent = parent;
     }
 
-    public ReporterImpl(String category, String name) {
-        this.report.category = category;
-        this.report.name = name;
+    public ReporterImpl(ReporterServiceImpl parent, String category, String name) {
+        this.report = new ReportImpl(category, name);
+        this.parent = parent;
     }
 
     @Override
     public Reporter start() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Reporter path(Object pathId) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Reporter ok() {
-        final long newStopTime = System.nanoTime();
-        report.stopTime = newStopTime;
-        report.failThrowable = null;
-        report.rejectId = null;
-        report.pathId = null;
+        this.lastProgressTime = this.report.startTime = System.nanoTime();
+        parent.getDispatcher().start(report);
         return this;
     }
 
     @Override
-    public Reporter ok(Object pathId) {
-        final long newStopTime = System.nanoTime();
-        report.stopTime = newStopTime;
-        report.failThrowable = null;
-        report.rejectId = null;
+    public Reporter path(Object pathId) {
         if (pathId instanceof String) {
             report.pathId = (String) pathId;
         } else if (pathId instanceof Enum) {
@@ -59,9 +54,36 @@ public class ReporterImpl implements Reporter {
     }
 
     @Override
+    public Reporter ok() {
+        report.stopTime = System.nanoTime();
+        report.failThrowable = null;
+        report.rejectId = null;
+        report.pathId = null;
+        parent.getDispatcher().ok(report);
+        return this;
+    }
+
+    @Override
+    public Reporter ok(Object pathId) {
+        report.stopTime = System.nanoTime();
+        report.failThrowable = null;
+        report.rejectId = null;
+        if (pathId instanceof String) {
+            report.pathId = (String) pathId;
+        } else if (pathId instanceof Enum) {
+            report.pathId = ((Enum<?>) pathId).name();
+        } else if (pathId instanceof Throwable) {
+            report.pathId = pathId.getClass().getSimpleName();
+        } else if (pathId != null) {
+            report.pathId = pathId.toString();
+        }
+        parent.getDispatcher().ok(report);
+        return this;
+    }
+
+    @Override
     public Reporter reject(Object cause) {
-        final long newStopTime = System.nanoTime();
-        report.stopTime = newStopTime;
+        report.stopTime = System.nanoTime();
         report.failThrowable = null;
         report.pathId = null;
         if (cause instanceof String) {
@@ -73,17 +95,18 @@ public class ReporterImpl implements Reporter {
         } else if (cause != null) {
             report.rejectId = cause.toString();
         }
+        parent.getDispatcher().reject(report);
         return this;
     }
 
     @Override
     public Reporter fail(Throwable cause) {
-        final long newStopTime = System.nanoTime();
-        report.stopTime = newStopTime;
+        report.stopTime = System.nanoTime();
         report.failThrowable = null;
         report.pathId = null;
         report.rejectId = null;
         report.failThrowable = cause;
+        parent.getDispatcher().fail(report);
         return this;
     }
 
