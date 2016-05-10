@@ -22,7 +22,7 @@ public interface Report {
     String getCategory();
 
     String getName();
-
+    
     String getTitle();
 
     String getDescription();

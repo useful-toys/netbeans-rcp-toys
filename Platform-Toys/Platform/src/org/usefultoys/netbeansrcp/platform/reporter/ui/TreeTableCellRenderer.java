@@ -7,10 +7,12 @@ package org.usefultoys.netbeansrcp.platform.reporter.ui;
 
 import java.awt.Component;
 import java.awt.Graphics;
+import javax.swing.Icon;
 
 import javax.swing.JTable;
 import javax.swing.JTree;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeModel;
 
 public class TreeTableCellRenderer extends JTree implements TableCellRenderer {
@@ -30,6 +32,20 @@ public class TreeTableCellRenderer extends JTree implements TableCellRenderer {
         // Muss explizit aufgerufen werden, weil treeTable noch
         // null ist, wenn super(model) setRowHeight aufruft!
         setRowHeight(getRowHeight());
+
+        this.setCellRenderer(new DefaultTreeCellRenderer() {
+            @Override
+            public Component getTreeCellRendererComponent(JTree tree,
+                    Object value, boolean selected, boolean expanded,
+                    boolean isLeaf, int row, boolean focused) {
+                Component c = super.getTreeCellRendererComponent(tree, value, selected, expanded, isLeaf, row, focused);
+                if (value != NodeFactory.ROOT) {
+                    setIcon(((NodeFactory.Node) value).getIcon());
+                    setText(null);
+                }
+                return c;
+            }
+        });
     }
 
     /**

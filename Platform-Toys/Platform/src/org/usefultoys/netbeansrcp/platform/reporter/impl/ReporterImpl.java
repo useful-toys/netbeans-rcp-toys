@@ -8,6 +8,7 @@ package org.usefultoys.netbeansrcp.platform.reporter.impl;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import org.usefultoys.netbeansrcp.platform.reporter.Report;
 import org.usefultoys.netbeansrcp.platform.reporter.Reporter;
 
 /**
@@ -107,6 +108,18 @@ public class ReporterImpl implements Reporter {
         report.rejectId = null;
         report.failThrowable = cause;
         parent.getDispatcher().fail(report);
+        return this;
+    }
+
+    @Override
+    public Reporter title(String title) {
+        this.report.title = title;
+        return this;
+    }
+
+    @Override
+    public Reporter description(String description) {
+        this.report.description = description;
         return this;
     }
 

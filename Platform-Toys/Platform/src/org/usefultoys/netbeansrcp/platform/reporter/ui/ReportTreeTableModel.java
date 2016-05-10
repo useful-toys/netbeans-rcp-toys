@@ -9,7 +9,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.swing.SwingUtilities;
 import org.usefultoys.netbeansrcp.platform.reporter.Report;
+import org.usefultoys.netbeansrcp.platform.reporter.ui.NodeFactory.Node;
+import static org.usefultoys.netbeansrcp.platform.reporter.ui.NodeFactory.ROOT;
 
 /**
  *
@@ -17,43 +20,14 @@ import org.usefultoys.netbeansrcp.platform.reporter.Report;
  */
 public class ReportTreeTableModel extends AbstractTreeTableModel {
 
-    static protected final String[] columnNames = {"", "Operação"};
-    static protected final Class<?>[] columnTypes = {TreeTableModel.class, String.class};
+    private final NodeFactory factory;
 
-    private static class Node {
+    static protected final String[] columnNames = {"", "Status", "Operation", "Where"};
+    static protected final Class<?>[] columnTypes = {TreeTableModel.class, String.class, String.class, String.class};
 
-        private boolean ok;
-        private String title;
-        private final Node[] path;
-        private List<Node> children;
-
-        Node() {
-            /* Constructor for ROOT node. */
-            this.title = "root";
-            this.children = new ArrayList<>();
-            this.ok = false;
-            this.path = new Node[]{this};
-        }
-
-        Node(Node parent, Report r) {
-            this.title = r.getTitle();
-            this.ok = r.isOK();
-            this.path = new Node[parent.path.length + 1];
-            System.arraycopy(parent.path, 0, this.path, 0, parent.path.length);
-            this.path[parent.path.length] = parent;
-        }
-
-        void update(Report r) {
-            this.title = r.getTitle();
-            this.ok = r.isOK();
-        }
-    }
-
-    private final static Node ROOT = new Node();
-    private final Map<String, Node> hashToNode = new HashMap<String, Node>();
-
-    public ReportTreeTableModel() {
-        super(ROOT);
+    public ReportTreeTableModel(NodeFactory factory) {
+        super(NodeFactory.ROOT);
+        this.factory = factory;
     }
 
     @Override
@@ -73,14 +47,18 @@ public class ReportTreeTableModel extends AbstractTreeTableModel {
 
     @Override
     public Object getValueAt(Object node, int column) {
-        if (node == ROOT) {
-            return "root";
-        } else if (node instanceof Report) {
+        if (node == "root") {
+            return null;
+        } else if (node instanceof Node) {
             switch (column) {
                 case 0:
-                    return ((Node) node);
+                    return ((Node) node).getIcon();
                 case 1:
-                    return ((Node) node).title;
+                    return ((Node) node).getStatusText();
+                case 2:
+                    return ((Node) node).getOperationText();
+                case 3:
+                    return ((Node) node).getWhereText();
                 default:
                     return null;
             }
@@ -101,61 +79,73 @@ public class ReportTreeTableModel extends AbstractTreeTableModel {
 
     @Override
     public Object getChild(Object parent, int index) {
-        return ((Node) parent).children.get(index);
+        if (parent == ROOT) {
+            return rootNodes.get(index);
+        }
+        return ((Node) parent).getChild(index);
     }
 
     @Override
     public int getChildCount(Object parent) {
-        Node parentNode = (Node) parent;
-        if (parentNode.children == null || parentNode.children.isEmpty()) {
-            return 0;
-        } else {
-            return parentNode.children.size();
+        if (parent == ROOT) {
+            return rootNodes.size();
         }
+        Node parentNode = (Node) parent;
+        if (parentNode.hasChildren()) {
+            return parentNode.getChildenCount();
+        }
+        return 0;
     }
 
-    private static int[] nonThreadSafeIntArraySingleton = new int[1];
-    private static Node[] nonThreadSafeNodeArraySingleton = new Node[1];
+    List<Node> rootNodes = new ArrayList<>();
+    private final Map<String, NodeFactory.Node> hashToNode = new HashMap<String, NodeFactory.Node>();
 
-    void adicionarOuAtualizar(Report report) {
+    private static int[] nonThreadSafeIntArraySingleton = new int[1];
+    private static Object[] nonThreadSafeNodeArraySingleton = new Object[1];
+
+    public Node adicionarOuAtualizar(Report report) {
         final Node currentNode = hashToNode.get(report.getHash());
         if (currentNode != null) {
             /* There is a node, update it. */
+            factory.update(currentNode, report);
             Node parentNode = hashToNode.get(report.getParentHash());
-            if (parentNode == null) parentNode = ROOT;
-            currentNode.update(report);
-            nonThreadSafeIntArraySingleton[0] = parentNode.children.size();
-            nonThreadSafeNodeArraySingleton[0] = currentNode;
-            fireTreeNodesChanged(this, parentNode.path, nonThreadSafeIntArraySingleton, nonThreadSafeNodeArraySingleton);
-            return;
+            if (parentNode != null) {
+                /* The node has a parent node. */
+                nonThreadSafeIntArraySingleton[0] = parentNode.getIndex(currentNode);
+                nonThreadSafeNodeArraySingleton[0] = parentNode;
+                fireTreeNodesChanged(this, parentNode.getTreePath().getPath(), nonThreadSafeIntArraySingleton, nonThreadSafeNodeArraySingleton);
+            } else {
+                /* The node is a root node. */
+                nonThreadSafeIntArraySingleton[0] = rootNodes.indexOf(currentNode);
+                nonThreadSafeNodeArraySingleton[0] = NodeFactory.ROOT;
+                fireTreeNodesChanged(this, NodeFactory.ROOT_PATH.getPath(), nonThreadSafeIntArraySingleton, nonThreadSafeNodeArraySingleton);
+            }
+            return currentNode;
         }
 
         if (report.getParentHash() == null) {
             /* First level nodes are always added. */
-            Node newNode = new Node(ROOT, report);
+            Node newNode = factory.createRootNode();
+            factory.update(newNode, report);
             hashToNode.put(report.getHash(), newNode);
-            nonThreadSafeIntArraySingleton[0] = ROOT.children.size();
+            rootNodes.add(newNode);
+            nonThreadSafeIntArraySingleton[0] = rootNodes.size()-1;
             nonThreadSafeNodeArraySingleton[0] = newNode;
-            ROOT.children.add(newNode);
-            fireTreeNodesInserted(this, ROOT.path, nonThreadSafeIntArraySingleton, nonThreadSafeNodeArraySingleton);
-            return;
+            fireTreeNodesInserted(this, NodeFactory.ROOT_PATH.getPath(), nonThreadSafeIntArraySingleton, nonThreadSafeNodeArraySingleton);
+            return newNode;
         }
-        if (currentNode == null) {
-            final Node parentNode = hashToNode.get(report.getParentHash());
-            if (parentNode == null) {
-                /* If the parent node was not added, then there is no need to add child node. */
-                return;
-            }
-            Node newNode = new Node(parentNode, report);
-            hashToNode.put(report.getHash(), newNode);
-            if (parentNode.children == null) {
-                parentNode.children = new ArrayList<Node>();
-            }
-            nonThreadSafeIntArraySingleton[0] = parentNode.children.size();
-            nonThreadSafeNodeArraySingleton[0] = newNode;
-            parentNode.children.add(newNode);
-            fireTreeNodesInserted(this, parentNode.path, nonThreadSafeIntArraySingleton, nonThreadSafeNodeArraySingleton);
-        } else {
+
+        final Node parentNode = hashToNode.get(report.getParentHash());
+        if (parentNode == null) {
+            /* If the parent node was not added, then there is no need to add child node. */
+            return null;
         }
+        Node newNode = factory.createChildNode(parentNode);
+        factory.update(newNode, report);
+        hashToNode.put(report.getHash(), newNode);
+        nonThreadSafeIntArraySingleton[0] = parentNode.getChildenCount()-1;
+        nonThreadSafeNodeArraySingleton[0] = parentNode;
+        fireTreeNodesInserted(this, parentNode.getTreePath().getPath(), nonThreadSafeIntArraySingleton, nonThreadSafeNodeArraySingleton);
+        return newNode;
     }
 }

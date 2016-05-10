@@ -30,13 +30,16 @@ public class TreeTableModelAdapter extends AbstractTableModel {
 
             @Override
             public void treeNodesInserted(TreeModelEvent e) {
-                tree.expandRow(0);
-                fireTableDataChanged();
+                if (tree.isExpanded(e.getTreePath())) {
+                    fireTableDataChanged();
+                }
             }
 
             @Override
             public void treeNodesRemoved(TreeModelEvent e) {
-                fireTableDataChanged();
+                if (tree.isExpanded(e.getTreePath())) {
+                    fireTableDataChanged();
+                }
             }
 
             @Override

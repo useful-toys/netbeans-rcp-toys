@@ -17,9 +17,9 @@ public interface Reporter {
 
 //    Report createReport(String operationName);
 //
-//    Report title(String title);
-//
-//    Report description(String description);
+    Reporter title(String title);
+
+    Reporter description(String description);
 //    
 //    Report message(String message);
 //    
