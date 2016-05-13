@@ -5,7 +5,6 @@
  */
 package org.usefultoys.netbeansrcp.platform.reporter.ui;
 
-import java.util.List;
 import javax.swing.Icon;
 import javax.swing.tree.TreePath;
 import org.usefultoys.netbeansrcp.platform.reporter.Report;

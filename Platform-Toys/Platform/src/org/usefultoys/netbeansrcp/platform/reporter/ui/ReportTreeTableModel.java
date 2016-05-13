@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.swing.SwingUtilities;
 import org.usefultoys.netbeansrcp.platform.reporter.Report;
 import org.usefultoys.netbeansrcp.platform.reporter.ui.NodeFactory.Node;
 import static org.usefultoys.netbeansrcp.platform.reporter.ui.NodeFactory.ROOT;

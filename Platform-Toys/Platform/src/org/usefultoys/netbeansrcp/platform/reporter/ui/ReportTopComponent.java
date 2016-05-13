@@ -5,7 +5,6 @@
  */
 package org.usefultoys.netbeansrcp.platform.reporter.ui;
 
-import javax.swing.SwingUtilities;
 import javax.swing.tree.TreePath;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -131,18 +130,33 @@ public final class ReportTopComponent extends TopComponent {
     }
 
     void progress(Report report) {
-        model.adicionarOuAtualizar(report);
+        NodeFactory.Node node = model.adicionarOuAtualizar(report);
+        if (table.isFocusOwner()) {
+            table.scrollRectToVisible(table.getCellRect(dummyTree.getRowForPath(node.getTreePath()), 0, true));
+        }
     }
 
     void ok(Report report) {
-        model.adicionarOuAtualizar(report);
+        NodeFactory.Node node = model.adicionarOuAtualizar(report);
+        if (! table.isFocusOwner()) {
+            dummyTree.collapsePath(node.getTreePath());
+            table.scrollRectToVisible(table.getCellRect(dummyTree.getRowForPath(node.getTreePath()), 0, true));
+        }
     }
 
     void reject(Report report) {
-        model.adicionarOuAtualizar(report);
+        NodeFactory.Node node = model.adicionarOuAtualizar(report);
+        if (! table.isFocusOwner()) {
+            dummyTree.collapsePath(node.getTreePath());
+            table.scrollRectToVisible(table.getCellRect(dummyTree.getRowForPath(node.getTreePath()), 0, true));
+        }
     }
 
     void fail(Report report) {
-        model.adicionarOuAtualizar(report);
+        NodeFactory.Node node = model.adicionarOuAtualizar(report);
+        if (! table.isFocusOwner()) {
+            dummyTree.expandPath(node.getTreePath());
+            table.scrollRectToVisible(table.getCellRect(dummyTree.getRowForPath(node.getTreePath()), 0, true));
+        }
     }
 }

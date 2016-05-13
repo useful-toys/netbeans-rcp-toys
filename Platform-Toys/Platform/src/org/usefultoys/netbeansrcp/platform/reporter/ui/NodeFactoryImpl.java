@@ -96,21 +96,31 @@ public class NodeFactoryImpl implements NodeFactory {
     }
 
     public static final String BASE = NodeFactoryImpl.class.getPackage().getName().replace('.', '/') + '/';
-    public static final ImageIcon ICON_OK = ImageUtilities.loadImageIcon(BASE + "report-ok.png", true);
-    public static final ImageIcon ICON_REJECT = ImageUtilities.loadImageIcon(BASE + "report-reject.png", true);
-    public static final ImageIcon ICON_FAIL = ImageUtilities.loadImageIcon(BASE + "report-fail.png", true);
     public static final ImageIcon ICON_START = ImageUtilities.loadImageIcon(BASE + "report-start.png", true);
-    public static final ImageIcon ICON_OK_GROUP = ImageUtilities.loadImageIcon(BASE + "report-ok-group.png", true);
-    public static final ImageIcon ICON_REJECT_GROUP = ImageUtilities.loadImageIcon(BASE + "report-reject-group.png", true);
-    public static final ImageIcon ICON_FAIL_GROUP = ImageUtilities.loadImageIcon(BASE + "report-fail-group.png", true);
     public static final ImageIcon ICON_START_GROUP = ImageUtilities.loadImageIcon(BASE + "report-start-group.png", true);
+    public static final ImageIcon ICON_OK = ImageUtilities.loadImageIcon(BASE + "report-ok.png", true);
+    public static final ImageIcon ICON_OK_GROUP = ImageUtilities.loadImageIcon(BASE + "report-ok-group.png", true);
+    public static final ImageIcon ICON_ALTERNATIVE = ImageUtilities.loadImageIcon(BASE + "report-alternative.png", true);
+    public static final ImageIcon ICON_ALTERNATIVE_GROUP = ImageUtilities.loadImageIcon(BASE + "report-alternative-group.png", true);
+    public static final ImageIcon ICON_REJECT = ImageUtilities.loadImageIcon(BASE + "report-reject.png", true);
+    public static final ImageIcon ICON_REJECT_GROUP = ImageUtilities.loadImageIcon(BASE + "report-reject-group.png", true);
+    public static final ImageIcon ICON_FAIL = ImageUtilities.loadImageIcon(BASE + "report-fail.png", true);
+    public static final ImageIcon ICON_FAIL_GROUP = ImageUtilities.loadImageIcon(BASE + "report-fail-group.png", true);
 
     @Override
     public void update(Node node, Report r) {
         NodeImpl nodeImpl = (NodeImpl) node;
-        if (r.isOK()) {
-            nodeImpl.icon = node.hasChildren() ? ICON_OK_GROUP : ICON_OK;
-            nodeImpl.statusText = "Succeded";
+        if (r.isCancel()) {
+            nodeImpl.icon = node.hasChildren() ? ICON_REJECT_GROUP : ICON_REJECT;
+            nodeImpl.statusText = "Canceled";
+        } else if (r.isOK()) {
+            if (r.getPathId() == null) {
+                nodeImpl.icon = node.hasChildren() ? ICON_OK_GROUP : ICON_OK;
+                nodeImpl.statusText = "Succeded";
+            } else {
+                nodeImpl.icon = node.hasChildren() ? ICON_ALTERNATIVE_GROUP : ICON_ALTERNATIVE;
+                nodeImpl.statusText = "Alternative";
+            }
         } else if (r.isReject()) {
             nodeImpl.icon = node.hasChildren() ? ICON_REJECT_GROUP : ICON_REJECT;
             nodeImpl.statusText = "Rejected";
@@ -122,6 +132,6 @@ public class NodeFactoryImpl implements NodeFactory {
             nodeImpl.statusText = "Running";
         }
         final String title = r.getTitle();
-        nodeImpl.operationText = title != null ? title: r.getHash();
+        nodeImpl.operationText = title != null ? title : r.getHash();
     }
 }

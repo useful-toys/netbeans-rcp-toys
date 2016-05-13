@@ -48,6 +48,10 @@ public class ReportImpl implements Report {
      */
     protected String pathId;
     /**
+     * For cancelled.
+     */
+    protected boolean cancel = false;
+    /**
      * For rejected execution, a string token that identifies the rejection
      * cause.
      */
@@ -133,19 +137,23 @@ public class ReportImpl implements Report {
         return stopTime != 0;
     }
 
+    public boolean isCancel() {
+        return cancel;
+    }
+
     @Override
     public boolean isOK() {
-        return (stopTime != 0) && (failThrowable == null && rejectId == null);
+        return ! cancel && (stopTime != 0) && (failThrowable == null && rejectId == null);
     }
 
     @Override
     public boolean isReject() {
-        return (stopTime != 0) && (rejectId != null);
+        return ! cancel && (stopTime != 0) && (rejectId != null);
     }
 
     @Override
     public boolean isFail() {
-        return (stopTime != 0) && (failThrowable != null);
+        return ! cancel && (stopTime != 0) && (failThrowable != null);
     }
 
     @Override

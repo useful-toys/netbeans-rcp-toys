@@ -26,6 +26,8 @@ import org.usefultoys.netbeansrcp.platform.reporter.ReporterService;
 @Messages("CTL_TesteAction1=Teste 1")
 public final class TesteAction1 implements ActionListener {
 
+    int counter = 1;
+    
     @Override
     public void actionPerformed(ActionEvent e) {
         new Thread() {
@@ -33,7 +35,7 @@ public final class TesteAction1 implements ActionListener {
             public void run() {
                 super.run(); //To change body of generated methods, choose Tools | Templates.
                 ReporterService s = ReporterService.getDefault();
-                Reporter r1 = s.createReporter("teste").title("Ope 1").start();
+                Reporter r1 = s.createReporter("teste").title("Ope 1 "+counter++).start();
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException ex) {
@@ -41,7 +43,7 @@ public final class TesteAction1 implements ActionListener {
                 }
                 r1.ok();
 
-                Reporter r2 = s.createReporter("teste").title("Ope 2").start();
+                Reporter r2 = s.createReporter("teste").title("Ope 2 "+counter++).start();
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException ex) {
@@ -49,7 +51,7 @@ public final class TesteAction1 implements ActionListener {
                 }
                 r2.fail(new Exception());
 
-                Reporter r3 = s.createReporter("teste").title("Ope 3").start();
+                Reporter r3 = s.createReporter("teste").title("Ope 3 "+counter++).start();
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException ex) {

@@ -46,6 +46,8 @@ public interface Report {
     public boolean isReject();
 
     public boolean isFail();
+    
+    public boolean isCancel();
 
     long getExecutionTime();
 

@@ -47,7 +47,6 @@ public interface Reporter {
 //
 //    Report unctx(final String name);
 //
-//    Report cancel();
 //
 //    Report inc();
 //
@@ -63,9 +62,9 @@ public interface Reporter {
 
     Reporter ok(Object pathId);
 
+    Reporter cancel();
+
     Reporter reject(Object cause);
 
     Reporter fail(final Throwable cause);
-
-    
 }

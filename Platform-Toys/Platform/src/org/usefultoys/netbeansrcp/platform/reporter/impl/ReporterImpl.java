@@ -5,9 +5,6 @@
  */
 package org.usefultoys.netbeansrcp.platform.reporter.impl;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
 import org.usefultoys.netbeansrcp.platform.reporter.Report;
 import org.usefultoys.netbeansrcp.platform.reporter.Reporter;
 
@@ -60,6 +57,7 @@ public class ReporterImpl implements Reporter {
         report.failThrowable = null;
         report.rejectId = null;
         report.pathId = null;
+        report.cancel = false;
         parent.getDispatcher().ok(report);
         return this;
     }
@@ -69,6 +67,7 @@ public class ReporterImpl implements Reporter {
         report.stopTime = System.nanoTime();
         report.failThrowable = null;
         report.rejectId = null;
+        report.cancel = false;
         if (pathId instanceof String) {
             report.pathId = (String) pathId;
         } else if (pathId instanceof Enum) {
@@ -83,10 +82,20 @@ public class ReporterImpl implements Reporter {
     }
 
     @Override
+    public Reporter cancel() {
+        report.cancel = true;
+        report.pathId = null;
+        report.failThrowable = null;
+        report.rejectId = null;
+        return this;
+    }
+
+    @Override
     public Reporter reject(Object cause) {
         report.stopTime = System.nanoTime();
         report.failThrowable = null;
         report.pathId = null;
+        report.cancel = false;
         if (cause instanceof String) {
             report.rejectId = (String) cause;
         } else if (cause instanceof Enum) {
@@ -107,6 +116,7 @@ public class ReporterImpl implements Reporter {
         report.pathId = null;
         report.rejectId = null;
         report.failThrowable = cause;
+        report.cancel = false;
         parent.getDispatcher().fail(report);
         return this;
     }
