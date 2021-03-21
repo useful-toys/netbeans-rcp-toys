@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Platform-Examples/Logger-Configuration-Properties2/Logger-Configuration-Properties2.iml" filepath="$PROJECT_DIR$/Platform-Examples/Logger-Configuration-Properties2/Logger-Configuration-Properties2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Platform-Toys/Platform/Platform.iml" filepath="$PROJECT_DIR$/Platform-Toys/Platform/Platform.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Platform-Toys/Platform-Dialog/Platform-Dialog.iml" filepath="$PROJECT_DIR$/Platform-Toys/Platform-Dialog/Platform-Dialog.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Platform-Examples/Platform-Layer-Argument/Platform-Layer-Argument.iml" filepath="$PROJECT_DIR$/Platform-Examples/Platform-Layer-Argument/Platform-Layer-Argument.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Platform-Toys/Platform-Security/Platform-Security.iml" filepath="$PROJECT_DIR$/Platform-Toys/Platform-Security/Platform-Security.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Platform-Toys/Platform-Security-UI/Platform-Security-UI.iml" filepath="$PROJECT_DIR$/Platform-Toys/Platform-Security-UI/Platform-Security-UI.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Report-Examples/Report-Examples.iml" filepath="$PROJECT_DIR$/Report-Examples/Report-Examples.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/netbeans-rcp-toys.iml" filepath="$PROJECT_DIR$/.idea/netbeans-rcp-toys.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Platform-Toys/Platform-Security/test/test.iml" filepath="$PROJECT_DIR$/Platform-Toys/Platform-Security/test/test.iml" />
+    </modules>
+  </component>
+</project>
